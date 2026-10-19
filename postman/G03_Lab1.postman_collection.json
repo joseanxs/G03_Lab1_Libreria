@@ -1,12 +1,12 @@
 {
   "info": {
-    "name": "GXX_Lab1 · Mini-API MVC",
+    "name": "G03_Lab1 · Mini-API MVC",
     "description": "Colección del Laboratorio 1 (Desarrollo Web Avanzado). Renombra GXX con tu número de grupo y /api/products con la ruta de tu entidad. Ejecuta las peticiones en orden (Run collection).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "1. Listar productos",
+      "name": "1. Listar libros",
       "event": [
         {
           "listen": "test",
@@ -23,19 +23,19 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/products",
+          "raw": "{{baseUrl}}/api/books",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
-            "products"
+            "books"
           ]
         }
       }
     },
     {
-      "name": "2. Crear producto",
+      "name": "2. Crear libro",
       "event": [
         {
           "listen": "test",
@@ -59,13 +59,13 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/products",
+          "raw": "{{baseUrl}}/api/books",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
-            "products"
+            "books"
           ]
         },
         "body": {
@@ -80,7 +80,7 @@
       }
     },
     {
-      "name": "3. Ver un producto",
+      "name": "3. Ver un libro",
       "event": [
         {
           "listen": "test",
@@ -97,20 +97,20 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/products/{{id}}",
+          "raw": "{{baseUrl}}/api/books/{{id}}",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
-            "products",
+            "books",
             "{{id}}"
           ]
         }
       }
     },
     {
-      "name": "4. Actualizar producto",
+      "name": "4. Actualizar libro",
       "event": [
         {
           "listen": "test",
@@ -132,13 +132,13 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/products/{{id}}",
+          "raw": "{{baseUrl}}/api/books/{{id}}",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
-            "products",
+            "books",
             "{{id}}"
           ]
         },
@@ -176,13 +176,13 @@
           }
         ],
         "url": {
-          "raw": "{{baseUrl}}/api/products",
+          "raw": "{{baseUrl}}/api/books",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
-            "products"
+            "books"
           ]
         },
         "body": {
@@ -213,20 +213,20 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/products/99999",
+          "raw": "{{baseUrl}}/api/books/99999",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
-            "products",
+            "books",
             "99999"
           ]
         }
       }
     },
     {
-      "name": "7. Eliminar producto",
+      "name": "7. Eliminar libro",
       "event": [
         {
           "listen": "test",
@@ -242,13 +242,13 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/products/{{id}}",
+          "raw": "{{baseUrl}}/api/books/{{id}}",
           "host": [
             "{{baseUrl}}"
           ],
           "path": [
             "api",
-            "products",
+            "books",
             "{{id}}"
           ]
         }
@@ -271,7 +271,7 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{baseUrl}}/api/products/{{id}}",
+          "raw": "{{baseUrl}}/api/books/{{id}}",
           "host": [
             "{{baseUrl}}"
           ],

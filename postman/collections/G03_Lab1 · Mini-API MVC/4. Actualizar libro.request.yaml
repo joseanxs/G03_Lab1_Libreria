@@ -1,0 +1,18 @@
+$kind: http-request
+url: "{{baseUrl}}/api/books/{{id}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "price": 3.5
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("200 OK", () => pm.response.to.have.status(200));
+      pm.test("Precio actualizado", () => pm.expect(pm.response.json().price).to.eql(3.5));
+    language: text/javascript
+order: 4000

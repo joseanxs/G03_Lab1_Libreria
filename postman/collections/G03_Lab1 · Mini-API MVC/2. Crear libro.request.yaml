@@ -1,0 +1,23 @@
+$kind: http-request
+url: "{{baseUrl}}/api/books"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Capuchino",
+      "price": 3.2,
+      "stock": 15,
+      "category": "bebidas"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("201 Created", () => pm.response.to.have.status(201));
+      const item = pm.response.json();
+      pm.test("Tiene id", () => pm.expect(item.id).to.exist);
+      pm.collectionVariables.set("id", item.id);
+    language: text/javascript
+order: 2000

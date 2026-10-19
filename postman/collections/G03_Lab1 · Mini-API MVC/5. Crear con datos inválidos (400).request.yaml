@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/api/books"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "",
+      "price": -1
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("400 Bad Request", () => pm.response.to.have.status(400));
+      pm.test("Mensaje de error en JSON", () => pm.expect(pm.response.json().error).to.be.a("string"));
+    language: text/javascript
+order: 5000

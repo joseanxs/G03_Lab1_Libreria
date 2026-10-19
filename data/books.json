@@ -54,5 +54,11 @@
     "title": "Los sabuesos de Baskerville",
     "price": 32,
     "available": true
+  },
+  {
+    "title": "Capuchino",
+    "price": 3.2,
+    "available": true,
+    "id": 9
   }
 ]

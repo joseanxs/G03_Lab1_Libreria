@@ -1,0 +1,5 @@
+$kind: collection
+description: Colección del Laboratorio 1 (Desarrollo Web Avanzado). Renombra GXX con tu número de grupo y /api/products con la ruta de tu entidad. Ejecuta las peticiones en orden (Run collection).
+variables:
+  baseUrl: http://localhost:3000
+  id: "1"
