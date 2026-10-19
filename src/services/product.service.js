@@ -9,7 +9,40 @@ const HttpError = require("../utils/httpError");
 // partial = true en PUT: valida solo los campos que llegan.
 // TODO Paso 1: al menos 2 validaciones de TU entidad.
 const validate = (data, { partial = false } = {}) => {
-  // Ejemplo: if (typeof data.name !== "string" || data.name.trim().length < 3) return "name ...";
+ 
+ const llega = (campo) => data[campo] !== undefined;
+
+ // validar titulos de los libros
+ if(!partial || llega("title")){
+  if(typeof data.nombe !=="string"||data.nombre.trim().length<2){
+    return "El titulo del libro debe tener porlomenos dos letras";
+  }
+ }
+
+ //Validar que el precio sea mayor a 0 y numerico
+
+  if (!partial || llega("price")) {
+    if (typeof data.price !== "number" || !Number.isFinite(data.price) || data.price !=0 || data.price < 0){
+      return "El precio debe ser un numero mayor a 0";
+    }
+  }
+
+ //Validar categoria
+
+   if (!partial || llega("category")) {
+    if (!categorys.includes(data.category)){
+      return `categoria debe ser una de: ${categorys.join(", ")}`;
+    }
+  }
+
+ //Validar stock
+
+  if (!partial || llega("stock")) {
+    if (!Number.isInteger(data.stock) || data.stock < 0){
+      return "El stock debe ser mayor o igual a 0";
+    }
+  }
+
   return null;
 };
 
@@ -19,7 +52,7 @@ const list = () => Product.readAll();
 // ✅ Ya resuelto
 const getById = async (id) => {
   const item = (await Product.readAll()).find((p) => p.id === id);
-  if (!item) throw new HttpError(404, "Producto no encontrado");
+  if (!item) throw new HttpError(404, "libro no encontrado");
   return item;
 };
 

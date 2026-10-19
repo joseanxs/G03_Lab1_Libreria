@@ -4,12 +4,12 @@
 
 | Dato | Valor |
 |---|---|
-| Grupo | GXX |
+| Grupo | G03 |
 | Emprendimiento | |
-| Integrantes | 1. <br> 2. <br> 3. <br> 4. |
-| NRC | |
-| Fecha | |
-| Repositorio | (enlace) |
+| Integrantes | 1. Frank Alvarado 2. Jose Reinoso 3. Yostin Sisalema |
+| NRC |36878 |
+| Fecha | 18-10-2026|
+| Repositorio | https://github.com/joseanxs/G03_Lab1_Libreria.git|
 
 ## Cómo ejecutar
 
@@ -19,7 +19,7 @@ cp .env.example .env      # en Windows: copy .env.example .env
 npm run dev               # http://localhost:3000
 ```
 
-Importa en Postman `postman/GXX_Lab1.postman_collection.json` y ejecuta **Run collection**.
+Importa en Postman `postman/G03_Lab1.postman_collection.json` y ejecuta **Run collection**.
 
 ## Estructura MVC en capas
 

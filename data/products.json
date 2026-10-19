@@ -1,4 +1,5 @@
 [
-  { "id": 1, "name": "Café americano", "price": 2.5, "stock": 40, "category": "bebidas" },
-  { "id": 2, "name": "Té verde", "price": 1.8, "stock": 25, "category": "bebidas" }
+  { "id": 1, "title": "Romeo y Julieta", "price": 10.5, "stock": 8, "category": "Romance" , "Author": "William Shakespeare"},
+  { "id": 2, "title": "Los sabuesos de Baskerville", "price": 12.0, "stock": 10, "category": "Misterio y Accion", "Author":"Arthur conan Doyle"},
+  { "id": 3, "title": "Cien años de soledad", "price": 15.0, "stock": 18,"category": "Novela", "Author": "Gabriel Garcia Marquez"}
 ]

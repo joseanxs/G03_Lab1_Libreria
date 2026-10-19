@@ -5,7 +5,7 @@ const { readFile, writeFile } = require("node:fs/promises");
 const FILE = process.env.DATA_FILE || "data/products.json";
 
 // TODO Paso 1: renombra product → tu entidad (este archivo, data/*.json y la ruta) y pon sus campos (4 o más)
-const FIELDS = ["name", "price", "stock", "category"];
+const FIELDS = ["title", "price", "stock", "category","Author"];
 
 const readAll = async () => JSON.parse(await readFile(FILE, "utf8"));
 const writeAll = (items) => writeFile(FILE, JSON.stringify(items, null, 2));
