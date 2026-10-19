@@ -2,7 +2,7 @@ const { readFile, writeFile } = require("node:fs/promises");
 
 // MODELO: la forma de los datos (campos) y dónde se guardan (archivo JSON).
 // En el Lab 2 este archivo desaparece: el modelo pasa a prisma/schema.prisma.
-const FILE = process.env.DATA_FILE || "data/products.json";
+const FILE = process.env.DATA_FILE || "data/books.json";
 
 // TODO Paso 1: renombra product → tu entidad (este archivo, data/*.json y la ruta) y pon sus campos (4 o más)
 const FIELDS = ["title", "price", "stock", "category","Author"];

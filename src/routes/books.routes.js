@@ -1,12 +1,12 @@
 const { Router } = require("express");
-const productController = require("../controllers/product.controller");
+const booksController = require("../controllers/books.controller");
 
 // RUTAS: conectan cada verbo + URL con una acción del controlador
 const router = Router();
 
 // ✅ Ya resueltas
-router.get("/", productController.list);
-router.get("/:id", productController.getById);
+router.get("/", booksController.list);
+router.get("/:id", booksController.getById);
 
 // TODO Paso 2: agrega POST "/" → create, PUT "/:id" → update y DELETE "/:id" → remove
 

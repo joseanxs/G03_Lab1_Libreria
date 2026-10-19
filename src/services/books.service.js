@@ -1,4 +1,4 @@
-const Product = require("../models/product.model");
+const book = require("../models/books.model");
 const HttpError = require("../utils/httpError");
 
 // SERVICIO: reglas de negocio y acceso a datos a través del modelo.
@@ -47,11 +47,11 @@ const validate = (data, { partial = false } = {}) => {
 };
 
 // ✅ Ya resuelto: úsalo como guía
-const list = () => Product.readAll();
+const list = () => book.readAll();
 
 // ✅ Ya resuelto
 const getById = async (id) => {
-  const item = (await Product.readAll()).find((p) => p.id === id);
+  const item = (await book.readAll()).find((p) => p.id === id);
   if (!item) throw new HttpError(404, "libro no encontrado");
   return item;
 };

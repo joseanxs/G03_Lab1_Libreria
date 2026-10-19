@@ -1,4 +1,4 @@
-const productService = require("../services/product.service");
+const booksService = require("../services/books.service");
 const HttpError = require("../utils/httpError");
 
 // CONTROLADOR: lee la petición (params, body), llama al servicio y decide código + JSON.
@@ -13,7 +13,7 @@ const parseId = (req) => {
 // ✅ Ya resuelto: GET / → 200
 const list = async (req, res, next) => {
   try {
-    res.json(await productService.list()); // 200
+    res.json(await booksService.list()); // 200
   } catch (err) {
     next(err);
   }
@@ -22,7 +22,7 @@ const list = async (req, res, next) => {
 // ✅ Ya resuelto: GET /:id → 200 (el servicio lanza 404 si no existe)
 const getById = async (req, res, next) => {
   try {
-    res.json(await productService.getById(parseId(req))); // 200
+    res.json(await booksService.getById(parseId(req))); // 200
   } catch (err) {
     next(err);
   }
