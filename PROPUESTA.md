@@ -1,4 +1,4 @@
-# Propuesta del emprendimiento · Grupo GXX
+# Propuesta del emprendimiento · Grupo G03
 
 > Actividad 1 de la sesión 1. Complétala antes del Paso 1 del laboratorio.
 
@@ -23,9 +23,9 @@ Pega aquí la imagen del diagrama (Excalidraw o Mermaid): navegador → servidor
 
 | Entidad | Atributos | ¿Se relaciona con…? |
 |---|---|---|
-| (entidad del Lab 1) | | |
-| | | |
-| | | |
+| Book (Libro - Lab 1) | `id`, `author`, `title`, `price`, `available` | Se relaciona con Category y Sale |
+| Customer (Cliente - Lab 2) | `id`, `name`, `email`, `phone` | Se relaciona con Sale (compras realizadas) |
+| Sale (Venta - Lab 3) | `id`, `bookId`, `customerId`, `quantity`, `total`, `date` | Se relaciona con Book y Customer |
 
 > La primera entidad es la que implementan en este laboratorio (4 o más campos). Las otras dos se usan en los Labs 2 y 3.
 
@@ -33,6 +33,6 @@ Pega aquí la imagen del diagrama (Excalidraw o Mermaid): navegador → servidor
 
 | Verbo | Ruta | Código de estado |
 |---|---|---|
-| | | |
-| | | |
-| | | |
+| GET | `/api/books` | 200 OK |
+| POST | `/api/books` | 201 Created (400 si datos inválidos) |
+| GET | `/api/books/:id` | 200 OK (404 si no existe) |

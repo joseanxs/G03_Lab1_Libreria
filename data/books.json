@@ -1,5 +1,58 @@
 [
-  { "id": 1, "title": "Romeo y Julieta", "price": 10.5, "stock": 8, "category": "Romance" , "Author": "William Shakespeare"},
-  { "id": 2, "title": "Los sabuesos de Baskerville", "price": 12.0, "stock": 10, "category": "Misterio y Accion", "Author":"Arthur conan Doyle"},
-  { "id": 3, "title": "Cien años de soledad", "price": 15.0, "stock": 18,"category": "Novela", "Author": "Gabriel Garcia Marquez"}
+  {
+    "id": 1,
+    "author": "William Shakespeare",
+    "title": "Romeo y Julieta",
+    "price": 10.5,
+    "available": true
+  },
+  {
+    "id": 2,
+    "author": "Arthur Lascano",
+    "title": "Los sabuesos de Vitinia",
+    "price": 32,
+    "available": true
+  },
+  {
+    "id": 3,
+    "author": "Gabriel Garcia Marquez",
+    "title": "Cien años de soledad",
+    "price": 15,
+    "available": true
+  },
+  {
+    "id": 4,
+    "author": "George Orwell",
+    "title": "1984",
+    "price": 13.5,
+    "available": true
+  },
+  {
+    "id": 5,
+    "author": "Arthur conan Doyle",
+    "title": "Los sabuesos de Baskerville",
+    "price": 22,
+    "available": false
+  },
+  {
+    "id": 6,
+    "author": "Arthur conan Doyle",
+    "title": "Los sabuesos de Baskerville",
+    "price": 22,
+    "available": false
+  },
+  {
+    "id": 7,
+    "author": "Arthur Vitinia",
+    "title": "Los sabuesos de Baskerville",
+    "price": 32,
+    "available": true
+  },
+  {
+    "id": 8,
+    "author": "Arthur Vitinia",
+    "title": "Los sabuesos de Baskerville",
+    "price": 32,
+    "available": true
+  }
 ]

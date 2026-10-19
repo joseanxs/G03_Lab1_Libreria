@@ -1,4 +1,4 @@
-const booksService = require("../services/books.service");
+const booksService = require("../services/book.service");
 const HttpError = require("../utils/httpError");
 
 // CONTROLADOR: lee la petición (params, body), llama al servicio y decide código + JSON.
@@ -28,19 +28,34 @@ const getById = async (req, res, next) => {
   }
 };
 
-// TODO Paso 2: POST / → llama a productService.create(req.body ?? {}) y responde 201 con el registro
+// TODO Paso 2: POST / → llama a booksService.create(req.body ?? {}) y responde 201 con el registro
 const create = async (req, res, next) => {
-  next(new HttpError(501, "create pendiente en el controlador"));
+  try {
+    const nuevo = await booksService.create(req.body ?? {});
+    res.status(201).json(nuevo);
+  } catch (err) {
+    next(err);
+  }
 };
 
-// TODO Paso 2: PUT /:id → llama a productService.update(parseId(req), req.body ?? {}) y responde 200
+// TODO Paso 2: PUT /:id → llama a booksService.update(parseId(req), req.body ?? {}) y responde 200
 const update = async (req, res, next) => {
-  next(new HttpError(501, "update pendiente en el controlador"));
+  try {
+    const actualizado = await booksService.update(parseId(req), req.body ?? {});
+    res.status(200).json(actualizado);
+  } catch (err) {
+    next(err);
+  }
 };
 
-// TODO Paso 2: DELETE /:id → llama a productService.remove(parseId(req)) y responde 204 sin cuerpo (res.status(204).end())
+// TODO Paso 2: DELETE /:id → llama a booksService.remove(parseId(req)) y responde 204 sin cuerpo (res.status(204).end())
 const remove = async (req, res, next) => {
-  next(new HttpError(501, "remove pendiente en el controlador"));
+  try {
+    await booksService.remove(parseId(req));
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
 };
 
 module.exports = { list, getById, create, update, remove };
