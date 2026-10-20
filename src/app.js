@@ -16,6 +16,17 @@ const app = express();
 app.use(express.json()); // reemplaza a body-parser: llena req.body con el JSON recibido
 app.use(logger);
 
+// Soporte de CORS para peticiones desde el cliente web (Vite / React)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 // 2. Rutas: todas cuelgan del prefijo /api (ver routes/index.js)
 app.get("/", (req, res) => res.json({ api: "Lab 1 · Mini-API MVC", estado: "ok" }));
 app.use("/api", routes);

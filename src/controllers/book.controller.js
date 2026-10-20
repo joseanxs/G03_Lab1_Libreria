@@ -58,4 +58,13 @@ const remove = async (req, res, next) => {
   }
 };
 
-module.exports = { list, getById, create, update, remove };
+const removeAll = async (req, res, next) => {
+  try {
+    await booksService.removeAll();
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { list, getById, create, update, remove, removeAll };

@@ -35,13 +35,6 @@
     "available": false
   },
   {
-    "id": 6,
-    "author": "Arthur conan Doyle",
-    "title": "Los sabuesos de Baskerville",
-    "price": 22,
-    "available": false
-  },
-  {
     "id": 7,
     "author": "Arthur Vitinia",
     "title": "Los sabuesos de Baskerville",
@@ -56,9 +49,10 @@
     "available": true
   },
   {
-    "title": "Capuchino",
-    "price": 3.2,
-    "available": true,
-    "id": 9
+    "id": 9,
+    "author": "Klinter Vitinia",
+    "title": "Los sabuesos de Baskerville",
+    "price": 12.34,
+    "available": true
   }
 ]

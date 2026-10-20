@@ -119,4 +119,8 @@ const remove = async (id) => {
   await book.writeAll(books);
 };
 
-module.exports = { list, getById, create, update, remove };
+const removeAll = async () => {
+  await book.writeAll([]);
+};
+
+module.exports = { list, getById, create, update, remove, removeAll };
