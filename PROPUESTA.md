@@ -10,6 +10,8 @@
 | 3 funciones principales | 1. Gestionar Catalogo(registrar,consultar,edira o eliminar libros) 2. Controlar el stock(descontar lo que se vende y detectar q se agota)  3. Registro de Ventas |
 
 ## Mapa frontend–backend
+El frontend esta hecho con Vite y React (basandonos del template https://github.com/satnaing/shadcn-admin), el cual se conecta con el backend mediante el protocolo HTTP comunidandose con los datos de JSON (data/books.json).
+![Diseño del sistema](diseno_visual.png)
 
 El diagrama se realizo mediante la herramienta de excalidraw
 

@@ -12,7 +12,7 @@
 | Repositorio | https://github.com/joseanxs/G03_Lab1_Libreria.git |
 
 ## Cómo ejecutar
-
+### 1. src/ (API REST en Express)
 ```bash
 npm install
 cp .env.example .env      # en Windows: copy .env.example .env
@@ -21,7 +21,18 @@ npm run dev               # http://localhost:3000 o puerto asignado
 
 Importa en Postman `postman/GXX_Lab1.postman_collection.json` y ejecuta **Run collection**.
 
-## Estructura MVC en capas
+### 2. client/ (Usando React con Vite)
+
+```bash
+cd client
+npm install
+npm run dev
+```
+Credenciales de prueba (precargadas): admin@espe.edu.ec / admin
+
+Documentación arquitectónica del cliente: Consultar client/GUIA_SCRIPTS.md.
+
+### Estructura MVC en capas
 
 ```
 src/
@@ -40,6 +51,16 @@ src/
 └─ utils/httpError.js
 data/
 └─ books.json        ← archivo JSON con los registros de libros
+client/
+├─ src/
+│  ├─ api/                  ← configuración de Axios y endpoints
+│  ├─ components/           ← componentes de interfaz (AuthModal, BookCard, BookForm)
+│  ├─ context/              ← BookProvider y hooks de autenticación (useBooks, useAuth)
+│  ├─ pages/                ← páginas principales (AuthPage, BookListPage, NotFoundPage)
+│  ├─ hooks/                ← hooks personalizados (useLogin)
+│  ├─ utils/                ← utilidades de UI y formato
+│  └─ main.jsx, App.jsx     ← entry point y layout principal
+└─ public/                  ← imágenes y otros recursos estáticos
 ```
 
 Flujo de una petición: **ruta → controlador → servicio → modelo** y de vuelta. El proyecto usa CommonJS (`require` / `module.exports`).
@@ -69,9 +90,12 @@ Flujo de una petición: **ruta → controlador → servicio → modelo** y de vu
 | **Yostin Sisalema** | Integrante 2: El Motor de la API (Servicio, Controlador y Rutas) | • **Renombrar y enrutar**: Renombrado de archivos a la entidad `book` en `src/` y montaje de la ruta base `/books` en `src/routes/index.js`.<br>• **Capa de Servicio**: Implementación de las funciones `create`, `update` y `remove` en `src/services/book.service.js` para persistencia en JSON, autoincremento de ID y lanzamiento de error 404.<br>• **Capa de Controlador**: Implementación de `create` (201), `update` (200) y `remove` (204) en `src/controllers/book.controller.js` delegando errores a `next(err)`.<br>• **Capa de Rutas**: Conexión de verbos y rutas relativas (`POST /`, `PUT /:id`, `DELETE /:id`) en `src/routes/book.routes.js`. |
 | **Frank Alvarado** | Integrante 3: Control de Calidad (Middlewares, Postman y Empaquetado) | • **Middlewares**: Configuración y revisión de `logger.js` (registro de método, ruta y hora en consola) y `errorHandler.js` / `notFound.js` (captura de errores 400, 404, 500).<br>• **Pruebas en Postman**: Ajuste de la colección `postman/GXX_Lab1.postman_collection.json` con las peticiones de `/api/books`, ejecución de *Run Collection* y verificación de pruebas en verde.<br>• **Evidencias y Empaquetado**: Captura de registros del logger (`evidencias/logger.png`), capturas de ejecución de Postman (`evidencias/postman-run.png`), exportación de colección v2.1 y preparación del ZIP final para entrega. |
 
+### Nota Adiccional: Sobre el desarrollo del /client
+
+Sobre el desarrollo del /client nos reunimos en live Server para organizarnos en el diseno, como usamos React, un framework para crear interfaces de usuario, nos enfocamos en disenar y estructurar los componentes de la interfaz de usuario, para ello nos ayudamos del diagrama [GUIA_SCRIPTS.md](GUIA_SCRIPTS.md) para guiarnos en el desarrollo del cliente. Como se muestra en la imagen [Diseño del sistema](diseno_visual.png), donde se muestra la estructura de componentes y como se conectan entre si. Algo por anadir usamos el template de este repositorio: https://github.com/satnaing/shadcn-admin.
 
 ## Declaración de uso de IA
 
-- Herramienta(s) usada(s): Antigravity IDE (Gemini)
-- Para qué la usamos: Depuración de validaciones en la capa de servicio, estructuración limpia de los métodos HTTP en el controlador y pruebas de integración local de los endpoints.
-- Qué verificamos o corregimos nosotros: Lógica de negocio de la entidad `book`, nombres y tipos de atributos en `data/books.json`, enrutamiento relativo sin duplicación de prefijos `/books`, y verificación de peticiones `POST`/`PUT` en Postman.
+- Herramientas: Plataformas web Gemini y Claude.
+- Para qué la usamos: 1. Para depurar y corregir errores en el código. 2. Para reforzar conceptos sobre los temas de arquitectura en capas vistos en clase. 3. Para consultar ejemplos de sintaxis en JavaScript y estructuración de componentes en librerías como React, utilizándolos como referencia.
+- Qué verificamos o corregimos nosotros: Lógica de negocio de la entidad `book`, nombres y tipos de atributos en `data/books.json`, validación de datos para evitar IDs repetidos y asegurar que los campos obligatorios estén completos y sean coherentes, enrutamiento relativo sin duplicación de prefijos `/books`, manejo de los 4 estados de interfaz en client/, y verificación de peticiones `POST`, `PUT` y `DELETE` en Postman.
