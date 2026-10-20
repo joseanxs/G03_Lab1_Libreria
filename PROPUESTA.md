@@ -11,7 +11,6 @@
 
 ## Mapa frontend–backend
 
-Pega aquí la imagen del diagrama (Excalidraw o Mermaid): navegador → servidor → base de datos, con sus flechas.
 El diagrama se realizo mediante la herramienta de excalidraw
 
 ![Mapa del sistema](mapa_G03_Lab1.png)
