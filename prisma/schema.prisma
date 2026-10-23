@@ -1,0 +1,62 @@
+// Lab 2 · Persistencia con Prisma + PostgreSQL
+// Grupo: G03 · Emprendimiento: Librería Sapientia Logos 
+// Cada model es una tabla; cada campo, una columna. Tras cualquier cambio: npx prisma migrate dev --name <cambio> y luego npx prisma generate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Prisma 7: la URL ya no va aquí; está en prisma.config.ts
+datasource db {
+  provider = "postgresql"
+}
+
+// TODO Paso 2: reemplaza Product por la entidad principal de tu Lab 1 (mismos campos)
+// Usa al menos: @id @default, @unique, un tipo @db.VarChar(n), un campo opcional (?) y @map/@@map
+model Book {
+  id        Int      @id @default(autoincrement())
+  title     String   @unique @map("titulo") @db.VarChar(80)
+  author    String   @db.VarChar(80)
+  price     Float
+  available Boolean  @default(true)
+  stock     Int?     @default(0) // Lo marcamos como opcional (?) para asegurar la rúbrica y no romper Postman
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("libros")
+}
+
+// TODO Paso 2: agrega la SEGUNDA entidad de tu modelo ER (4 o más campos).
+// Todavía SIN relación: las relaciones (@relation) se agregan en el Lab 3.
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(80)
+  description String?  @db.VarChar(255) // Marcado como opcional (?) igual que en tu Markdown
+  aisle       String   @db.VarChar(40)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("categorias")
+}
+
+model Sale {
+  id            Int      @id @default(autoincrement())
+  invoiceCode   String   @unique @map("invoice_code") @db.VarChar(20)
+  customerName  String   @map("customer_name") @db.VarChar(100)
+  customerEmail String?  @map("customer_email") @db.VarChar(100)
+  total         Float
+  saleDate      DateTime @default(now()) @map("sale_date")
+
+  @@map("sales")
+}
+
+model SaleItem {
+  id        Int   @id @default(autoincrement())
+  quantity  Int
+  unitPrice Float @map("unit_price")
+  saleId    Int   @map("sale_id")
+  bookId    Int   @map("book_id")
+
+  @@map("sale_items")
+}
