@@ -10,6 +10,7 @@ router.get("/:id", bookController.getById);
 
 // TODO Paso 2: agrega POST "/" → create, PUT "/:id" → update y DELETE "/:id" → remove
 router.post("/", bookController.create);
+router.post("/lote", bookController.createMany);
 router.put("/:id", bookController.update);
 router.delete("/:id", bookController.remove);
 router.delete("/", bookController.removeAll);

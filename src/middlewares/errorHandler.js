@@ -1,30 +1,29 @@
+// Lab 2: códigos de error de Prisma → código HTTP
+const PRISMA_ERRORS = {
+    P2002: { statusCode: 409, message: "Ya existe un registro con ese valor único" },
+    P2025: { statusCode: 404, message: "Registro no encontrado" },
+    P2000: { statusCode: 400, message: "Un valor excede la longitud permitida" },
+};
 
 const errorHandler = (err, req, res, next) => {
-    console.error(`[ERROR] ${req.method} ${req.originalUrl}`);
-    console.error(err.stack || err.message || err);
+    const prismaError = PRISMA_ERRORS[err.code];
 
-    if (res.headersSent) {
-        return next(err);
+    // HttpError usa err.status; se acepta también err.statusCode
+    const statusCode = prismaError?.statusCode || err.statusCode || err.status || 500;
+    const message = prismaError?.message || err.message || "Ocurrio un error inesperado";
+
+    console.log(
+        `[ERROR] ${new Date().toISOString()} - ${statusCode} - ${message}`,
+    );
+    if (err.stack) {
+        console.error(err.stack);
     }
 
-    const statusCode = err.status || err.statusCode || 500;
-
-    const status =
-        Number.isInteger(statusCode) &&
-        statusCode >= 400 &&
-        statusCode <= 599
-            ? statusCode
-            : 500;
-
-    const message =
-        typeof err.message === "string"
-            ? err.message
-            : "Error interno del servidor";
-
-    res.status(status).json({
-        success: false,
+    res.status(statusCode).json({
+        status: "error",
+        statusCode,
         message,
-        error: message
+        ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
     });
 };
 

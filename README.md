@@ -1,4 +1,4 @@
-# Laboratorio 1 · Mini-API MVC con CRUD
+# Laboratorio 2 · Percistencia con prisma
 
 **Desarrollo Web Avanzado (A0R04) · ESPE · Unidad 1: Persistencia de datos y ORM**
 
