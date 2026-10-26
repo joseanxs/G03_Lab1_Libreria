@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "G03_Lab2 · Persistencia con Prisma",
-    "description": "Colección del Laboratorio 2. Renombra GXX con tu número de grupo y /api/products con la ruta de tu entidad. Ejecuta con Run collection en orden. Requiere haber ejecutado npx prisma db seed (usa el registro «Café americano» para probar 409).",
+    "description": "Colección del Laboratorio 2. Renombra G03 con tu número de grupo y /api/products con la ruta de tu entidad. Ejecuta con Run collection en orden. Requiere haber ejecutado npx prisma db seed (usa el registro «Café americano» para probar 409).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
