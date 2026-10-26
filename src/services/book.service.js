@@ -55,6 +55,11 @@ const validate = (data, { partial = false } = {}) => {
     }
   }
 
+  // Categoría (opcional): entero o null
+  if (llega("categoryId") && data.categoryId !== null && !Number.isInteger(data.categoryId)) {
+    return "categoryId debe ser un entero o null";
+  }
+
   return null;
 };
 

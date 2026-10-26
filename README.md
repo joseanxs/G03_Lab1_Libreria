@@ -245,3 +245,63 @@ Con respecto al desarrollo del /client, realizamos una reunión en Live Server p
     -- Para reforzar conceptos sobre los temas de arquitectura en capas vistos en clase. 
     -- Para consultar ejemplos de sintaxis en JavaScript y estructuración de componentes en librerías como React, utilizándolos como referencia. 
 - Qué verificamos o corregimos nosotros: Lógica de negocio de la entidad `book`, nombres y tipos de atributos en `data/books.json`, validación de datos para evitar IDs repetidos y asegurar que los campos obligatorios estén completos y sean coherentes, enrutamiento relativo sin duplicación de prefijos `/books`, manejo de los 4 estados de interfaz en client/, y verificación de peticiones `POST`, `PUT` y `DELETE` en Postman.
+
+
+---
+
+# Lab 3 · Autenticación, relaciones, transacciones y despliegue
+
+| Dato | Valor |
+|---|---|
+| URL pública (Railway) | https://TU-DOMINIO.up.railway.app |
+| Rama | `lab3-railway` (o la que use el grupo) |
+
+## Usuarios de prueba (seed)
+
+| Rol | Email | Contraseña |
+|---|---|---|
+| ADMIN | admin@libreria.com | Admin123* |
+| USER | ana@correo.com | Ana12345* |
+
+## Cómo ejecutar el Lab 3
+
+```bash
+npm install
+cp .env.example .env            # agrega JWT_SECRET
+npx prisma migrate dev --name relaciones
+npx prisma generate
+npx prisma db seed
+npm run dev
+```
+
+## Endpoints
+
+| Método | Ruta | Rol | Códigos |
+|---|---|---|---|
+| POST | /api/auth/register | público | 201, 400, 409 |
+| POST | /api/auth/login | público | 200, 400, 401 |
+| GET | /api/auth/me | token | 200, 401, 403 |
+| GET | /api/books · /api/books/:id | público | 200, 404 |
+| POST · PUT · DELETE | /api/books · /api/books/:id · /api/books/lote | ADMIN | 201/200/204, 400, 401, 403, 404, 409 |
+| POST | /api/orders | USER | 201, 400, 401, 404, 409 (sin stock, ROLLBACK) |
+| GET | /api/orders | USER | 200, 401 |
+| PATCH | /api/orders/:id/cancel | USER (dueño) | 200, 403, 404, 409 |
+| GET | /api/admin/orders?status&from&to&page&limit | ADMIN | 200 `{ page, limit, total, pages, data }`, 400, 403 |
+| PATCH | /api/admin/orders/:id/status | ADMIN | 200, 400, 404 |
+| GET | /api/admin/reports/top-books?limit | ADMIN | 200 |
+
+## Decisiones de `onDelete`
+
+Ver la tabla «Relaciones y `onDelete`» en [MODELO_ER.md](MODELO_ER.md).
+
+## Aporte de cada integrante
+
+| Integrante | Aporte |
+|---|---|
+| Jose Reinoso | _completar_ |
+| Yostin Sisalema | _completar_ |
+| Frank Alvarado | _completar_ |
+
+## Uso de IA
+
+_Completar: herramienta usada, qué se le pidió y qué se verificó/modificó manualmente._

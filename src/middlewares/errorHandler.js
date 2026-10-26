@@ -1,75 +1,33 @@
+const { Prisma } = require("@prisma/client");
 
-/**
- * Lab 2: Middleware centralizado para el manejo de errores.
- * Traduce errores de Prisma y errores HTTP a respuestas JSON.
- */
-
-// Errores conocidos de Prisma y su equivalente HTTP
-const PRISMA_ERRORS = {
-    P2002: {
-        statusCode: 409,
-        message: "Ya existe un registro con ese valor único",
-    },
-    P2025: {
-        statusCode: 404,
-        message: "Registro no encontrado",
-    },
-    P2000: {
-        statusCode: 400,
-        message: "Un valor excede la longitud permitida",
-    },
+// Traduce los errores conocidos de Prisma a códigos HTTP
+const fromPrisma = (err) => {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+        if (err.code === "P2002") {
+            // Prisma 7 (con adaptador) informa la restricción en meta.driverAdapterError
+            const campo = err.meta?.target ?? err.meta?.driverAdapterError?.cause?.constraint?.index ?? "campo único";
+            return { status: 409, message: `Ya existe un registro con ese valor único (${campo})` };
+        }
+        if (err.code === "P2025") return { status: 404, message: "Registro no encontrado" };
+        // FK con onDelete: Restrict → no se puede borrar un registro que otros usan
+        if (err.code === "P2003") return { status: 409, message: "No se puede eliminar: hay registros relacionados" };
+    }
+    if (err instanceof Prisma.PrismaClientValidationError) return { status: 400, message: "Datos con tipo o formato inválido" };
+    return null;
 };
 
-// Middleware de manejo de errores de Express
+// Manejador de errores: 4 parámetros. Responde siempre en JSON.
 const errorHandler = (err, req, res, next) => {
-    // Si la respuesta ya comenzó, delegar al siguiente manejador
-    if (res.headersSent) {
-        return next(err);
+    const mapped = fromPrisma(err);
+    // JSON mal formado en el body → 400
+    const status = mapped?.status ?? (err.type === "entity.parse.failed" ? 400 : err.status || 500);
+    const body = { error: status === 500 ? "Error interno del servidor" : mapped?.message ?? err.message };
+    if (status === 500) {
+        console.error(err);
+        // En desarrollo se muestra el detalle; en producción, nunca
+        if (process.env.NODE_ENV !== "production") body.stack = err.stack;
     }
-
-    // Identificar errores conocidos de Prisma
-    const prismaError = PRISMA_ERRORS[err.code];
-
-    // Obtener el código HTTP y validar su rango
-    const candidateStatus =
-        prismaError?.statusCode ??
-        err.statusCode ??
-        err.status ??
-        500;
-
-    const statusCode =
-        Number.isInteger(candidateStatus) &&
-        candidateStatus >= 400 &&
-        candidateStatus <= 599
-            ? candidateStatus
-            : 500;
-
-    // Evitar exponer mensajes internos de errores inesperados
-    const message = prismaError?.message ??
-        (statusCode < 500
-            ? err.message
-            : "Ocurrió un error interno del servidor");
-
-    // Registrar información útil para depuración
-    const timestamp = new Date().toISOString();
-
-    console.error(
-        `[ERROR] ${timestamp} | ${req.method} ${req.originalUrl} | ${statusCode} | ${message}`
-    );
-
-    if (err.stack) {
-        console.error(err.stack);
-    }
-
-    // Respuesta uniforme para el cliente
-    return res.status(statusCode).json({
-        status: "error",
-        statusCode,
-        message,
-        ...(process.env.NODE_ENV === "development" && {
-            stack: err.stack,
-        }),
-    });
+    res.status(status).json(body);
 };
 
 module.exports = errorHandler;
