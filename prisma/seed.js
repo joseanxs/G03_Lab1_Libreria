@@ -4,6 +4,7 @@ const bcrypt = require("bcryptjs");
 
 async function main() {
 
+    // borra todo lo que hay en la base de datos
     await prisma.orderItem.deleteMany();
     await prisma.order.deleteMany();
     await prisma.customer.deleteMany();

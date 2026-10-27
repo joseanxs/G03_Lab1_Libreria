@@ -1,15 +1,13 @@
 // Lab 3 · Relaciones, mapeo y consultas avanzadas
-// Grupo: G03 · Emprendimiento: Librería Sapientia Logos 
-// TODO Paso 2: este es el schema de EJEMPLO (cafetería). Conserva User y Role tal cual y
-// reemplaza Customer/Product/Order/OrderItem por TUS entidades con al menos:
-//   · una relación 1:1, una 1:N y una N:M (implícita o explícita)
-//   · onDelete elegido a propósito (Cascade, Restrict o SetNull) en cada relación
-//   · un enum, un Decimal o DateTime y un @@index o @@unique compuesto
-// Tras cualquier cambio: npx prisma migrate dev --name <cambio>
+// Grupo: G03 · Emprendimiento: Librería Sapientia Logos
+// Relaciones: 1:1 User-Customer · 1:N Category-Book y Customer-Order · N:M Order-Book (tabla OrderItem)
+// Tras cualquier cambio: npx prisma migrate dev --name <cambio> y luego npx prisma generate
+
 generator client {
   provider = "prisma-client-js"
 }
 
+// Prisma 7: la URL ya no va aquí; está en prisma.config.ts
 datasource db {
   provider = "postgresql"
 }
@@ -25,6 +23,7 @@ enum OrderStatus {
   CANCELLED
 }
 
+// Usuario que se autentica con JWT
 model User {
   id        Int       @id @default(autoincrement())
   email     String    @unique @db.VarChar(120)
@@ -37,7 +36,7 @@ model User {
   @@map("users")
 }
 
-// Entidad del Lab 2, ahora relacionada
+// Perfil de cliente: se crea junto con el usuario al registrarse
 model Customer {
   id        Int      @id @default(autoincrement())
   fullName  String   @map("full_name") @db.VarChar(100)
@@ -45,28 +44,52 @@ model Customer {
   phone     String?  @db.VarChar(15)
   createdAt DateTime @default(now()) @map("created_at")
 
+  // 1:1 con User: la FK es única. Si se borra el usuario, se borra su perfil (Cascade)
   userId Int?  @unique @map("user_id")
   user   User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  orders Order[]
+  orders Order[] // 1:N
 
   @@map("customers")
 }
 
-model Product {
-  id        Int         @id @default(autoincrement())
-  name      String      @unique @db.VarChar(80)
-  price     Decimal     @db.Decimal(10, 2)
-  stock     Int         @default(0)
-  category  String?     @db.VarChar(40)
-  createdAt DateTime    @default(now()) @map("created_at")
-  updatedAt DateTime    @updatedAt @map("updated_at")
-  items     OrderItem[]
+// Entidad del Lab 2: ahora pertenece a una categoría
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique @db.VarChar(80)
+  description String?  @db.VarChar(255)
+  aisle       String   @db.VarChar(40)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  books       Book[] // 1:N
 
-  @@map("products")
+  @@map("categorias")
+}
+
+// Entidad principal del emprendimiento (Lab 1 y Lab 2). Su stock es el recurso limitado de los pedidos
+model Book {
+  id        Int      @id @default(autoincrement())
+  title     String   @unique @map("titulo") @db.VarChar(80)
+  author    String   @db.VarChar(80)
+  price     Decimal  @db.Decimal(10, 2) // Prisma lo devuelve como texto: "10.50"
+  available Boolean  @default(true)
+  stock     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // 1:N con Category. Si se borra la categoría, el libro se conserva sin categoría (SetNull)
+  categoryId Int?      @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  items OrderItem[] // N:M con Order a través de OrderItem
+
+  @@index([categoryId])
+  @@map("libros")
 }
 
 // 1:N: un cliente tiene muchos pedidos; un pedido pertenece a un cliente
+// Restrict: no se puede borrar un cliente que tiene pedidos (se conserva el historial)
 model Order {
   id         Int         @id @default(autoincrement())
   status     OrderStatus @default(PENDING)
@@ -77,19 +100,20 @@ model Order {
   items      OrderItem[]
 
   @@index([customerId])
-  @@index([status, createdAt])
+  @@index([status, createdAt]) // acelera el filtro del listado de administración
   @@map("orders")
 }
 
-// N:M explícita: la tabla intermedia guarda datos propios (cantidad y precio)
+// N:M explícita: la tabla intermedia guarda datos propios (cantidad y precio unitario)
+// Cascade con el pedido (sin pedido no hay ítems) y Restrict con el libro (no se borra un libro vendido)
 model OrderItem {
   orderId   Int     @map("order_id")
-  productId Int     @map("product_id")
+  bookId    Int     @map("book_id")
   quantity  Int
   unitPrice Decimal @map("unit_price") @db.Decimal(10, 2)
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  book      Book    @relation(fields: [bookId], references: [id], onDelete: Restrict)
 
-  @@id([orderId, productId])
+  @@id([orderId, bookId]) // clave primaria compuesta: un libro aparece una sola vez por pedido
   @@map("order_items")
 }
