@@ -18,11 +18,4 @@ router.put("/:id", onlyAdmin, bookController.update);
 router.delete("/:id", onlyAdmin, bookController.remove);
 router.delete("/", onlyAdmin, bookController.removeAll);
 module.exports = router;
-
-
 // RUTAS: leer el catálogo es público; modificarlo, solo ADMIN
-
-
-
-
-module.exports = router;
