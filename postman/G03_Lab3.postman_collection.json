@@ -1,7 +1,7 @@
 {
   "info": {
-    "name": "G03_Lab3 · Relaciones, auth y despliegue",
-    "description": "Laboratorio 3 · Desarrollo Web Avanzado. Ejecuta primero `npx prisma db seed`. Para probar el despliegue, cambia baseUrl por la URL pública de Railway.",
+    "name": "G03_Lab3 · Librería Sapientia Logos",
+    "description": "Laboratorio 3 · Ejecuta primero `npx prisma db seed`. Entorno: local (baseUrl). Ajusta adminEmail/adminPassword según tu seed.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -152,7 +152,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"401 Unauthorized\", () => pm.response.to.have.status(401));",
-                  "pm.test(\"Mensaje genérico\", () => pm.expect(pm.response.json().error).to.include(\"inválidos\"));"
+                  "pm.test(\"Mensaje genérico\", () => { const j = pm.response.json(); pm.expect((j.message || \"\") + \" \" + (j.error || \"\")).to.include(\"inválidos\"); });"
                 ]
               }
             }
@@ -341,7 +341,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@cafe.com\",\n  \"password\": \"Admin123*\"\n}",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -368,10 +368,10 @@
       ]
     },
     {
-      "name": "Productos (rol ADMIN)",
+      "name": "Libros (rol ADMIN)",
       "item": [
         {
-          "name": "9. Crear producto como USER (403)",
+          "name": "9. Crear libro como USER (403)",
           "request": {
             "method": "POST",
             "header": [
@@ -381,18 +381,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/products",
+              "raw": "{{baseUrl}}/api/books",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "products"
+                "books"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"No permitido\",\n  \"price\": 1,\n  \"stock\": 1\n}",
+              "raw": "{\n  \"title\": \"No permitido\",\n  \"author\": \"Nadie\",\n  \"price\": 1,\n  \"stock\": 1\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -423,7 +423,7 @@
           ]
         },
         {
-          "name": "10. Crear producto como ADMIN (201)",
+          "name": "10. Crear libro como ADMIN (201)",
           "request": {
             "method": "POST",
             "header": [
@@ -433,18 +433,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/products",
+              "raw": "{{baseUrl}}/api/books",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "products"
+                "books"
               ]
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Mocaccino {{$timestamp}}\",\n  \"price\": 3.75,\n  \"stock\": 5,\n  \"category\": \"bebidas\"\n}",
+              "raw": "{\n  \"title\": \"Libro de prueba {{$timestamp}}\",\n  \"author\": \"Autor de prueba\",\n  \"price\": 3.75,\n  \"stock\": 5\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -469,7 +469,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"productId\", pm.response.json().id);",
+                  "pm.collectionVariables.set(\"bookId\", pm.response.json().id);",
                   "pm.test(\"price es Decimal (llega como texto)\", () => pm.expect(pm.response.json().price).to.eql(\"3.75\"));"
                 ]
               }
@@ -503,7 +503,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"productId\": {{productId}},\n      \"quantity\": 2\n    }\n  ]\n}",
+              "raw": "{\n  \"items\": [\n    {\n      \"bookId\": {{bookId}},\n      \"quantity\": 2\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -531,7 +531,7 @@
                   "const o = pm.response.json();",
                   "pm.collectionVariables.set(\"orderId\", o.id);",
                   "pm.test(\"Total = 2 × 3.75\", () => pm.expect(o.total).to.eql(\"7.5\"));",
-                  "pm.test(\"Incluye ítems con producto (N:M)\", () => pm.expect(o.items[0].product.id).to.eql(pm.collectionVariables.get(\"productId\")));"
+                  "pm.test(\"Incluye ítems con libro (N:M)\", () => pm.expect(o.items[0].book.id).to.eql(pm.collectionVariables.get(\"bookId\")));"
                 ]
               }
             }
@@ -559,7 +559,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"productId\": {{productId}},\n      \"quantity\": 1\n    },\n    {\n      \"productId\": {{productId2}},\n      \"quantity\": 999\n    }\n  ]\n}",
+              "raw": "{\n  \"items\": [\n    {\n      \"bookId\": {{bookId}},\n      \"quantity\": 1\n    },\n    {\n      \"bookId\": {{bookId2}},\n      \"quantity\": 999\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -592,9 +592,12 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "// Segundo producto del seed para probar que el primero NO se descuenta",
-                  "pm.sendRequest(pm.collectionVariables.get(\"baseUrl\") + \"/api/products\", (err, res) => {",
-                  "  pm.collectionVariables.set(\"productId2\", res.json().find((p) => p.name === \"Croissant\").id);",
+                  "// Segundo libro del seed (distinto al creado) para probar que el primero NO se descuenta",
+                  "pm.sendRequest(pm.collectionVariables.get(\"baseUrl\") + \"/api/books\", (err, res) => {",
+                  "  const j = res.json();",
+                  "  const list = Array.isArray(j) ? j : (j.data || []);",
+                  "  const other = list.find((b) => b.id != pm.collectionVariables.get(\"bookId\"));",
+                  "  pm.collectionVariables.set(\"bookId2\", other.id);",
                   "});"
                 ]
               }
@@ -607,14 +610,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "raw": "{{baseUrl}}/api/books/{{bookId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "products",
-                "{{productId}}"
+                "books",
+                "{{bookId}}"
               ]
             },
             "auth": {
@@ -635,7 +638,7 @@
           ]
         },
         {
-          "name": "14. Pedido de producto inexistente (404)",
+          "name": "14. Pedido de libro inexistente (404)",
           "request": {
             "method": "POST",
             "header": [
@@ -656,7 +659,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"items\": [\n    {\n      \"productId\": 999999,\n      \"quantity\": 1\n    }\n  ]\n}",
+              "raw": "{\n  \"items\": [\n    {\n      \"bookId\": 999999,\n      \"quantity\": 1\n    }\n  ]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -825,14 +828,14 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "raw": "{{baseUrl}}/api/books/{{bookId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "products",
-                "{{productId}}"
+                "books",
+                "{{bookId}}"
               ]
             },
             "auth": {
@@ -1038,12 +1041,12 @@
           ]
         },
         {
-          "name": "23. Admin: top productos con groupBy (200)",
+          "name": "23. Admin: top libros con groupBy (200)",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/admin/reports/top-products?limit=3",
+              "raw": "{{baseUrl}}/api/admin/reports/top-books?limit=3",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1051,7 +1054,7 @@
                 "api",
                 "admin",
                 "reports",
-                "top-products"
+                "top-books"
               ],
               "query": [
                 {
@@ -1078,26 +1081,27 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"Cada fila tiene name y unitsSold\", () => pm.response.json().forEach((r) => pm.expect(r).to.include.keys(\"productId\", \"name\", \"unitsSold\")));"
+                  "pm.test(\"Es un arreglo\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));",
+                  "pm.test(\"Cada fila tiene bookId, title y unitsSold\", () => pm.response.json().forEach((r) => pm.expect(r).to.include.keys(\"bookId\", \"title\", \"unitsSold\")));"
                 ]
               }
             }
           ]
         },
         {
-          "name": "24. Borrar producto con pedidos (409, Restrict)",
+          "name": "24. Borrar libro con pedidos (409, Restrict)",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/products/{{productId}}",
+              "raw": "{{baseUrl}}/api/books/{{bookId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
-                "products",
-                "{{productId}}"
+                "books",
+                "{{bookId}}"
               ]
             },
             "auth": {
@@ -1117,7 +1121,39 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"409 Conflict\", () => pm.response.to.have.status(409));"
+                  "pm.test(\"409 Conflict\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Mensaje del middleware\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "25. Ruta inexistente (404, notFound)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ruta-que-no-existe",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "ruta-que-no-existe"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
                 ]
               }
             }
@@ -1130,6 +1166,14 @@
     {
       "key": "baseUrl",
       "value": "http://localhost:3000"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@libreria.com"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin123*"
     },
     {
       "key": "email",
@@ -1148,11 +1192,11 @@
       "value": "token.que.no.sirve"
     },
     {
-      "key": "productId",
+      "key": "bookId",
       "value": ""
     },
     {
-      "key": "productId2",
+      "key": "bookId2",
       "value": ""
     },
     {
