@@ -1,7 +1,7 @@
 {
-  "name": "lab1-mini-api-mvc",
+  "name": "lab3-mini-api-mvc",
   "version": "1.0.0",
-  "description": "Laboratorio 1 · Desarrollo Web Avanzado · Mini-API MVC con CRUD para el emprendimiento del grupo",
+  "description": "Laboratorio 3 · Desarrollo Web Avanzado · Relaciones,autenticación y despliegue de la API",
   "main": "src/server.js",
   "scripts": {
     "dev": "node --watch src/server.js",

@@ -2,8 +2,6 @@
  
 **Emprendimiento:** Librería Sapientia Logos · **Desarrollo Web Avanzado (A0R04) · ESPE**
  
-> Actividad 3 de la sesión 4. Es la base del `schema.prisma` del Lab 2 y de las relaciones del Lab 3.
- 
 ## Diagrama
 
 ```mermaid
