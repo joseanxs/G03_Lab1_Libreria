@@ -253,8 +253,10 @@ Con respecto al desarrollo del /client, realizamos una reunión en Live Server p
 
 | Dato | Valor |
 |---|---|
-| URL pública (Railway) | https://TU-DOMINIO.up.railway.app |
-| Rama | `lab3-railway` (o la que use el grupo) |
+| URL pública (Render) | https://g03-lab1-libreria.onrender.com |
+| Rama | _completar: nombre de la rama del grupo_ |
+
+> **Nota:** el enunciado sugiere Railway; se desplegó en **Render**, que ofrece lo mismo (PostgreSQL administrado + Web Service conectado a GitHub). En el plan gratuito de Render el servicio se suspende por inactividad, por lo que la primera petición puede tardar en responder.
 
 ## Usuarios de prueba (seed)
 
@@ -274,6 +276,19 @@ npx prisma db seed
 npm run dev
 ```
 
+## Despliegue en Render
+
+1. Crear una base **PostgreSQL** en Render y copiar su *Internal Database URL* y su *External Database URL*.
+2. Crear un **Web Service** conectado al repositorio de GitHub.
+3. **Build Command:** `npm install && npx prisma generate`
+4. **Start Command:** `npx prisma migrate deploy && node src/server.js`
+5. **Variables de entorno:** `DATABASE_URL` (Internal), `JWT_SECRET` y `NODE_ENV=production`.
+6. **Seed:** ejecutado desde local contra la *External Database URL* (equivalente a `DATABASE_PUBLIC_URL` en Railway).
+
+## Manejo de errores de clave foránea
+
+El middleware `src/middlewares/errorHandler.js` captura el error de Prisma `P2003` (restricción de clave foránea con `onDelete: Restrict`) y responde `409 Conflict`.
+
 ## Endpoints
 
 | Método | Ruta | Rol | Códigos |
@@ -290,6 +305,13 @@ npm run dev
 | PATCH | /api/admin/orders/:id/status | ADMIN | 200, 400, 404 |
 | GET | /api/admin/reports/top-books?limit | ADMIN | 200 |
 
+## Pruebas en Postman
+
+Colección de 25 peticiones (`postman/G03_Lab3.postman_collection.json`) adaptada a las rutas de la librería, ejecutada en local y contra Render.
+
+- `evidencias/postman-local.png`
+- `evidencias/railway-run.png` (captura de la ejecución en **Render**; se mantiene el nombre que pide la rúbrica)
+
 ## Decisiones de `onDelete`
 
 Ver la tabla «Relaciones y `onDelete`» en [MODELO_ER.md](MODELO_ER.md).
@@ -304,4 +326,4 @@ Ver la tabla «Relaciones y `onDelete`» en [MODELO_ER.md](MODELO_ER.md).
 
 ## Uso de IA
 
-_Completar: herramienta usada, qué se le pidió y qué se verificó/modificó manualmente._
+Se usó **Claude (Anthropic)** para adaptar los pasos de despliegue de Railway a Render, revisar que la URL pública respondiera (`GET /api/books` devolvió los libros en JSON) y redactar esta documentación. _Completar: qué se verificó o modificó manualmente (pruebas en Postman, error 409 por FK, ROLLBACK sin stock)._

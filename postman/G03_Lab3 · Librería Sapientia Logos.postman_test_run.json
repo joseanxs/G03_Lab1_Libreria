@@ -1,0 +1,899 @@
+{
+	"id": "bbdca268-8e63-462f-ae9b-01bbb5dc8051",
+	"name": "G03_Lab3 · Librería Sapientia Logos",
+	"timestamp": "2026-10-28T23:48:38.714Z",
+	"collection_id": "58684240-a317cab2-a754-4644-ad0d-d919b76fd412",
+	"folder_id": 0,
+	"environment_id": "0",
+	"totalPass": 42,
+	"delay": 0,
+	"persist": true,
+	"status": "finished",
+	"startedAt": "2026-10-28T23:48:35.523Z",
+	"totalFail": 0,
+	"results": [
+		{
+			"id": "05ec05ff-acaa-406d-93b0-e529d13035fe",
+			"name": "1. Registrar usuario (201)",
+			"url": "http://localhost:3000/api/auth/register",
+			"time": 117,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"201 Created": true,
+				"No devuelve la contraseña": true,
+				"Crea el perfil 1:1": true
+			},
+			"testPassFailCounts": {
+				"201 Created": {
+					"pass": 1,
+					"fail": 0
+				},
+				"No devuelve la contraseña": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Crea el perfil 1:1": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				117
+			],
+			"allTests": [
+				{
+					"201 Created": true,
+					"No devuelve la contraseña": true,
+					"Crea el perfil 1:1": true
+				}
+			]
+		},
+		{
+			"id": "8b7b1c22-9d1f-475c-ae3c-915c484ff704",
+			"name": "2. Registrar correo repetido (409)",
+			"url": "http://localhost:3000/api/auth/register",
+			"time": 79,
+			"responseCode": {
+				"code": 409,
+				"name": "Conflict"
+			},
+			"tests": {
+				"409 Conflict": true
+			},
+			"testPassFailCounts": {
+				"409 Conflict": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				79
+			],
+			"allTests": [
+				{
+					"409 Conflict": true
+				}
+			]
+		},
+		{
+			"id": "f50f658c-9cf1-4c04-a83e-98928b9089b8",
+			"name": "3. Login con clave incorrecta (401)",
+			"url": "http://localhost:3000/api/auth/login",
+			"time": 84,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"401 Unauthorized": true,
+				"Mensaje genérico": true
+			},
+			"testPassFailCounts": {
+				"401 Unauthorized": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Mensaje genérico": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				84
+			],
+			"allTests": [
+				{
+					"401 Unauthorized": true,
+					"Mensaje genérico": true
+				}
+			]
+		},
+		{
+			"id": "fa4ce06d-abb2-4255-a42e-7665f466cfde",
+			"name": "4. Login correcto (200 + token)",
+			"url": "http://localhost:3000/api/auth/login",
+			"time": 80,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true,
+				"Entrega un JWT": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Entrega un JWT": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				80
+			],
+			"allTests": [
+				{
+					"200 OK": true,
+					"Entrega un JWT": true
+				}
+			]
+		},
+		{
+			"id": "059fb541-1ba3-49c2-b329-acae92fcf065",
+			"name": "5. Perfil sin token (401)",
+			"url": "http://localhost:3000/api/auth/me",
+			"time": 3,
+			"responseCode": {
+				"code": 401,
+				"name": "Unauthorized"
+			},
+			"tests": {
+				"401 Unauthorized": true
+			},
+			"testPassFailCounts": {
+				"401 Unauthorized": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"401 Unauthorized": true
+				}
+			]
+		},
+		{
+			"id": "eaa38bcc-5a94-4bfb-9d42-ad6532d34419",
+			"name": "6. Perfil con token inválido (403)",
+			"url": "http://localhost:3000/api/auth/me",
+			"time": 3,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"403 Forbidden": true
+			},
+			"testPassFailCounts": {
+				"403 Forbidden": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"403 Forbidden": true
+				}
+			]
+		},
+		{
+			"id": "6d33424a-51c3-41f4-be4d-536ebbfd8f29",
+			"name": "7. Perfil con token (200)",
+			"url": "http://localhost:3000/api/auth/me",
+			"time": 6,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true,
+				"Es el usuario registrado": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Es el usuario registrado": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				6
+			],
+			"allTests": [
+				{
+					"200 OK": true,
+					"Es el usuario registrado": true
+				}
+			]
+		},
+		{
+			"id": "7d570153-bc51-40cf-8572-652ac7829b50",
+			"name": "8. Login admin del seed (200)",
+			"url": "http://localhost:3000/api/auth/login",
+			"time": 76,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				76
+			],
+			"allTests": [
+				{
+					"200 OK": true
+				}
+			]
+		},
+		{
+			"id": "a5fdff9a-b96c-473e-96d0-2d56e7579c1d",
+			"name": "9. Crear libro como USER (403)",
+			"url": "http://localhost:3000/api/books",
+			"time": 4,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"403 Forbidden": true
+			},
+			"testPassFailCounts": {
+				"403 Forbidden": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				4
+			],
+			"allTests": [
+				{
+					"403 Forbidden": true
+				}
+			]
+		},
+		{
+			"id": "e3fabefb-090d-4ecb-b475-c35a0d63c2bd",
+			"name": "10. Crear libro como ADMIN (201)",
+			"url": "http://localhost:3000/api/books",
+			"time": 103,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"201 Created": true,
+				"price es Decimal (llega como texto)": true
+			},
+			"testPassFailCounts": {
+				"201 Created": {
+					"pass": 1,
+					"fail": 0
+				},
+				"price es Decimal (llega como texto)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				103
+			],
+			"allTests": [
+				{
+					"201 Created": true,
+					"price es Decimal (llega como texto)": true
+				}
+			]
+		},
+		{
+			"id": "3a14a6be-e808-4267-8775-de409464f328",
+			"name": "11. Pedido con stock suficiente (201)",
+			"url": "http://localhost:3000/api/orders",
+			"time": 24,
+			"responseCode": {
+				"code": 201,
+				"name": "Created"
+			},
+			"tests": {
+				"201 Created": true,
+				"Total = 2 × 3.75": true,
+				"Incluye ítems con libro (N:M)": true
+			},
+			"testPassFailCounts": {
+				"201 Created": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Total = 2 × 3.75": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Incluye ítems con libro (N:M)": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				24
+			],
+			"allTests": [
+				{
+					"201 Created": true,
+					"Total = 2 × 3.75": true,
+					"Incluye ítems con libro (N:M)": true
+				}
+			]
+		},
+		{
+			"id": "53e0bf21-cde7-4a07-8367-c6725f231b07",
+			"name": "12. Pedido sin stock (409, ROLLBACK)",
+			"url": "http://localhost:3000/api/orders",
+			"time": 9,
+			"responseCode": {
+				"code": 409,
+				"name": "Conflict"
+			},
+			"tests": {
+				"409 Conflict": true
+			},
+			"testPassFailCounts": {
+				"409 Conflict": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				9
+			],
+			"allTests": [
+				{
+					"409 Conflict": true
+				}
+			]
+		},
+		{
+			"id": "102c07b4-dbcc-4fbf-beee-93f231977ab5",
+			"name": "13. Verificar ROLLBACK: stock = 3",
+			"url": "http://localhost:3000/api/books/5",
+			"time": 5,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true,
+				"El ítem 1 no se descontó": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				},
+				"El ítem 1 no se descontó": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				5
+			],
+			"allTests": [
+				{
+					"200 OK": true,
+					"El ítem 1 no se descontó": true
+				}
+			]
+		},
+		{
+			"id": "e3e5ee8f-0da3-407f-9979-ab5bde7238a2",
+			"name": "14. Pedido de libro inexistente (404)",
+			"url": "http://localhost:3000/api/orders",
+			"time": 7,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"404 Not Found": true
+			},
+			"testPassFailCounts": {
+				"404 Not Found": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				7
+			],
+			"allTests": [
+				{
+					"404 Not Found": true
+				}
+			]
+		},
+		{
+			"id": "16dc44da-a957-424b-8c19-260689986cf9",
+			"name": "15. Pedido con items inválidos (400)",
+			"url": "http://localhost:3000/api/orders",
+			"time": 3,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"400 Bad Request": true
+			},
+			"testPassFailCounts": {
+				"400 Bad Request": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"400 Bad Request": true
+				}
+			]
+		},
+		{
+			"id": "f3184934-5005-424c-bce1-9d7069d9c45c",
+			"name": "16. Mis pedidos (200, include)",
+			"url": "http://localhost:3000/api/orders",
+			"time": 8,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true,
+				"Un pedido con sus ítems": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Un pedido con sus ítems": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				8
+			],
+			"allTests": [
+				{
+					"200 OK": true,
+					"Un pedido con sus ítems": true
+				}
+			]
+		},
+		{
+			"id": "3dd24375-25ce-4764-b7a3-c870fd2b88a2",
+			"name": "17. Cancelar pedido (200, devuelve stock)",
+			"url": "http://localhost:3000/api/orders/2/cancel",
+			"time": 121,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true,
+				"Queda CANCELLED": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Queda CANCELLED": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				121
+			],
+			"allTests": [
+				{
+					"200 OK": true,
+					"Queda CANCELLED": true
+				}
+			]
+		},
+		{
+			"id": "8d66e383-9d2e-4a51-89b9-d5d1c14ca581",
+			"name": "18. Stock restaurado = 5",
+			"url": "http://localhost:3000/api/books/5",
+			"time": 5,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true,
+				"stock vuelve a 5": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				},
+				"stock vuelve a 5": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				5
+			],
+			"allTests": [
+				{
+					"200 OK": true,
+					"stock vuelve a 5": true
+				}
+			]
+		},
+		{
+			"id": "c184f6e3-80cb-4618-a63d-148a59c46197",
+			"name": "19. Cancelar otra vez (409)",
+			"url": "http://localhost:3000/api/orders/2/cancel",
+			"time": 13,
+			"responseCode": {
+				"code": 409,
+				"name": "Conflict"
+			},
+			"tests": {
+				"409 Conflict": true
+			},
+			"testPassFailCounts": {
+				"409 Conflict": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				13
+			],
+			"allTests": [
+				{
+					"409 Conflict": true
+				}
+			]
+		},
+		{
+			"id": "0be451c2-e7c4-42d7-b5e9-18eb801aff15",
+			"name": "20. Admin: pedidos filtrados y paginados (200)",
+			"url": "http://localhost:3000/api/admin/orders?status=CANCELLED&page=1&limit=5",
+			"time": 13,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true,
+				"Respuesta paginada": true,
+				"Solo CANCELLED": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Respuesta paginada": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Solo CANCELLED": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				13
+			],
+			"allTests": [
+				{
+					"200 OK": true,
+					"Respuesta paginada": true,
+					"Solo CANCELLED": true
+				}
+			]
+		},
+		{
+			"id": "70831f36-6f7f-485f-b191-48e319aacc61",
+			"name": "21. Admin: status inválido (400)",
+			"url": "http://localhost:3000/api/admin/orders?status=PERDIDO",
+			"time": 3,
+			"responseCode": {
+				"code": 400,
+				"name": "Bad Request"
+			},
+			"tests": {
+				"400 Bad Request": true
+			},
+			"testPassFailCounts": {
+				"400 Bad Request": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"400 Bad Request": true
+				}
+			]
+		},
+		{
+			"id": "f0c4ac9b-1043-4a06-a364-433fc1c74c9e",
+			"name": "22. Admin con rol USER (403)",
+			"url": "http://localhost:3000/api/admin/orders",
+			"time": 3,
+			"responseCode": {
+				"code": 403,
+				"name": "Forbidden"
+			},
+			"tests": {
+				"403 Forbidden": true
+			},
+			"testPassFailCounts": {
+				"403 Forbidden": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"403 Forbidden": true
+				}
+			]
+		},
+		{
+			"id": "6d7e148f-3856-4642-8b22-63530538dd00",
+			"name": "23. Admin: top libros con groupBy (200)",
+			"url": "http://localhost:3000/api/admin/reports/top-books?limit=3",
+			"time": 7,
+			"responseCode": {
+				"code": 200,
+				"name": "OK"
+			},
+			"tests": {
+				"200 OK": true,
+				"Es un arreglo": true,
+				"Cada fila tiene bookId, title y unitsSold": true
+			},
+			"testPassFailCounts": {
+				"200 OK": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Es un arreglo": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Cada fila tiene bookId, title y unitsSold": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				7
+			],
+			"allTests": [
+				{
+					"200 OK": true,
+					"Es un arreglo": true,
+					"Cada fila tiene bookId, title y unitsSold": true
+				}
+			]
+		},
+		{
+			"id": "396a9c77-b434-4bf3-a685-2a8b5de0bc58",
+			"name": "24. Borrar libro con pedidos (409, Restrict)",
+			"url": "http://localhost:3000/api/books/5",
+			"time": 8,
+			"responseCode": {
+				"code": 409,
+				"name": "Conflict"
+			},
+			"tests": {
+				"409 Conflict": true,
+				"Mensaje del middleware": true
+			},
+			"testPassFailCounts": {
+				"409 Conflict": {
+					"pass": 1,
+					"fail": 0
+				},
+				"Mensaje del middleware": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				8
+			],
+			"allTests": [
+				{
+					"409 Conflict": true,
+					"Mensaje del middleware": true
+				}
+			]
+		},
+		{
+			"id": "127638ad-39ae-44d7-b1f7-0147c69d6057",
+			"name": "25. Ruta inexistente (404, notFound)",
+			"url": "http://localhost:3000/api/ruta-que-no-existe",
+			"time": 3,
+			"responseCode": {
+				"code": 404,
+				"name": "Not Found"
+			},
+			"tests": {
+				"404 Not Found": true
+			},
+			"testPassFailCounts": {
+				"404 Not Found": {
+					"pass": 1,
+					"fail": 0
+				}
+			},
+			"times": [
+				3
+			],
+			"allTests": [
+				{
+					"404 Not Found": true
+				}
+			]
+		}
+	],
+	"count": 1,
+	"totalTime": 787,
+	"collection": {
+		"requests": [
+			{
+				"id": "05ec05ff-acaa-406d-93b0-e529d13035fe",
+				"method": "POST"
+			},
+			{
+				"id": "8b7b1c22-9d1f-475c-ae3c-915c484ff704",
+				"method": "POST"
+			},
+			{
+				"id": "f50f658c-9cf1-4c04-a83e-98928b9089b8",
+				"method": "POST"
+			},
+			{
+				"id": "fa4ce06d-abb2-4255-a42e-7665f466cfde",
+				"method": "POST"
+			},
+			{
+				"id": "059fb541-1ba3-49c2-b329-acae92fcf065",
+				"method": "GET"
+			},
+			{
+				"id": "eaa38bcc-5a94-4bfb-9d42-ad6532d34419",
+				"method": "GET"
+			},
+			{
+				"id": "6d33424a-51c3-41f4-be4d-536ebbfd8f29",
+				"method": "GET"
+			},
+			{
+				"id": "7d570153-bc51-40cf-8572-652ac7829b50",
+				"method": "POST"
+			},
+			{
+				"id": "a5fdff9a-b96c-473e-96d0-2d56e7579c1d",
+				"method": "POST"
+			},
+			{
+				"id": "e3fabefb-090d-4ecb-b475-c35a0d63c2bd",
+				"method": "POST"
+			},
+			{
+				"id": "3a14a6be-e808-4267-8775-de409464f328",
+				"method": "POST"
+			},
+			{
+				"id": "53e0bf21-cde7-4a07-8367-c6725f231b07",
+				"method": "POST"
+			},
+			{
+				"id": "102c07b4-dbcc-4fbf-beee-93f231977ab5",
+				"method": "GET"
+			},
+			{
+				"id": "e3e5ee8f-0da3-407f-9979-ab5bde7238a2",
+				"method": "POST"
+			},
+			{
+				"id": "16dc44da-a957-424b-8c19-260689986cf9",
+				"method": "POST"
+			},
+			{
+				"id": "f3184934-5005-424c-bce1-9d7069d9c45c",
+				"method": "GET"
+			},
+			{
+				"id": "3dd24375-25ce-4764-b7a3-c870fd2b88a2",
+				"method": "PATCH"
+			},
+			{
+				"id": "8d66e383-9d2e-4a51-89b9-d5d1c14ca581",
+				"method": "GET"
+			},
+			{
+				"id": "c184f6e3-80cb-4618-a63d-148a59c46197",
+				"method": "PATCH"
+			},
+			{
+				"id": "0be451c2-e7c4-42d7-b5e9-18eb801aff15",
+				"method": "GET"
+			},
+			{
+				"id": "70831f36-6f7f-485f-b191-48e319aacc61",
+				"method": "GET"
+			},
+			{
+				"id": "f0c4ac9b-1043-4a06-a364-433fc1c74c9e",
+				"method": "GET"
+			},
+			{
+				"id": "6d7e148f-3856-4642-8b22-63530538dd00",
+				"method": "GET"
+			},
+			{
+				"id": "396a9c77-b434-4bf3-a685-2a8b5de0bc58",
+				"method": "DELETE"
+			},
+			{
+				"id": "127638ad-39ae-44d7-b1f7-0147c69d6057",
+				"method": "GET"
+			}
+		]
+	}
+}
