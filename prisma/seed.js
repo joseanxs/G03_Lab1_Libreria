@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 async function main() {
 
     // borra todo lo que hay en la base de datos
+    await prisma.review.deleteMany();
     await prisma.orderItem.deleteMany();
     await prisma.order.deleteMany();
     await prisma.customer.deleteMany();
@@ -33,7 +34,7 @@ async function main() {
     });
 
     // 3. Usuarios con perfil (1:1) 
-    await prisma.user.create({
+    const admin = await prisma.user.create({
         data: { email: "admin@libreria.com", password: await bcrypt.hash("Admin123*", 10), name: "Administración", role: "ADMIN" },
     });
     const ana = await prisma.user.create({
@@ -55,6 +56,16 @@ async function main() {
             status: "DELIVERED",
             items: { create: [{ bookId: libro.id, quantity: 2, unitPrice: libro.price }] },
         },
+    });
+
+    // 5. Reseñas de ejemplo (Taller A: 1:N, una reseña por usuario y libro)
+    const romeo = await prisma.book.findUnique({ where: { title: "Romeo y Julieta" } });
+    await prisma.review.createMany({
+        data: [
+            { rating: 5, comment: "Una distopía imprescindible", userId: ana.id, bookId: libro.id },
+            { rating: 4, comment: "Muy actual, aunque algo larga", userId: admin.id, bookId: libro.id },
+            { rating: 5, userId: ana.id, bookId: romeo.id },
+        ],
     });
 
     console.log(

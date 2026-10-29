@@ -32,6 +32,7 @@ model User {
   role      Role      @default(USER)
   createdAt DateTime  @default(now()) @map("created_at")
   customer  Customer? // 1:1 → el lado sin FK
+  reviews   Review[] // Taller A: 1:N, un usuario escribe muchas reseñas
 
   @@map("users")
 }
@@ -84,6 +85,8 @@ model Book {
 
   items OrderItem[] // N:M con Order a través de OrderItem
 
+  reviews Review[] // Taller A: 1:N, un libro recibe muchas reseñas
+
   @@index([categoryId])
   @@map("libros")
 }
@@ -116,4 +119,21 @@ model OrderItem {
 
   @@id([orderId, bookId]) // clave primaria compuesta: un libro aparece una sola vez por pedido
   @@map("order_items")
+}
+
+// Taller · Tarjeta A: reseñas de un libro (1:N con User y con Book)
+// Cascade en ambos lados: una reseña no tiene sentido sin su autor ni sin el libro reseñado
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int      @db.SmallInt // 1 a 5 (se valida en el servicio)
+  comment   String?  @db.VarChar(300)
+  createdAt DateTime @default(now()) @map("created_at")
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookId    Int      @map("book_id")
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId]) // una reseña por usuario y libro
+  @@index([bookId]) // acelera el listado de reseñas de un libro
+  @@map("reviews")
 }
