@@ -341,6 +341,68 @@ Servicio y base de datos en Render:
 
 Con respecto al desarrollo del /client, realizamos una reunión en Live Server para coordinar el diseño. Al trabajar con React (un framework para el desarrollo de interfaces de usuario), nuestro enfoque principal fue estructurar y diseñar los componentes de la interfaz. En este proceso, empleamos el diagrama del [Mapa del sistema](mapa_G03_Lab1.png) como guía para el desarrollo del cliente. La estructura de estos componentes y sus conexiones mutuas se pueden apreciar en la imagen [Diseño del sistema](diseno_visual.png). Por último, cabe añadir que implementamos la plantilla del repositorio shadcn-admin.
 
+## Taller · Tarjeta A · Reseñas · Yostin Sisalema
+
+Los usuarios califican un libro con 1 a 5 estrellas y un comentario opcional. Cada usuario puede reseñar un mismo libro una sola vez.
+
+### Contrato de los endpoints
+
+| Método | Ruta | Rol | Body | Respuestas |
+|--------|------|-----|------|------------|
+| POST | `/api/books/:id/reviews` | Usuario autenticado | `{ rating: 1-5, comment?: texto de hasta 300 caracteres }` | 201 reseña creada · 400 `rating` o `comment` inválidos · 401 sin token · 403 token inválido · 404 libro inexistente · 409 ya reseñó ese libro |
+| GET | `/api/books/:id/reviews?page&limit` | Público | n/a (query: `page`, `limit`) | 200 `{ bookId, average, total, page, limit, pages, data }` · 400 id no numérico · 404 libro inexistente |
+| DELETE | `/api/reviews/:id` | Autor o ADMIN | n/a | 204 sin cuerpo · 400 id no numérico · 401 sin token · 403 no es el autor · 404 reseña inexistente |
+
+### Modelo y decisiones
+
+**Modelo:** `Review` tiene una relación 1:N con `User` y otra 1:N con `Book`, con `@@unique([userId, bookId])` (una reseña por usuario y libro), `rating` como `@db.SmallInt`, `@@index([bookId])` para listar las reseñas de un libro y `@@map("reviews")`. Ambas relaciones usan `onDelete: Cascade`: una reseña no tiene sentido sin su autor ni sin el libro reseñado, así que si se elimina cualquiera de los dos, la reseña se elimina con él. El modelo se incluye en el `schema.prisma` común y en la migración única `taller` que sube el integrador.
+
+**Decisiones de diseño:**
+
+- `rating` debe ser un entero de 1 a 5 (`"5"` o `4.5` responden 400). `comment` es opcional; si llega vacío o solo con espacios se guarda como `null`.
+- El 409 de reseña repetida lo garantiza la base con el único compuesto, así que dos peticiones simultáneas del mismo usuario no pueden crear dos reseñas.
+- El listado devuelve las reseñas más recientes primero, con el nombre del autor (nunca su correo ni su contraseña). El promedio sale de `aggregate` con `_avg`, redondeado a 2 decimales, y es `null` cuando el libro no tiene reseñas.
+- `page` vale 1 y `limit` vale 10 por defecto, con un máximo de 50. Los valores inválidos usan los valores por defecto.
+- Un ADMIN puede eliminar cualquier reseña, y el autor solo la suya.
+
+### Archivos de la tarjeta
+
+- `src/routes/review.routes.js`, `src/controllers/review.controller.js` y `src/services/review.service.js`: ruta → controlador → servicio. Las consultas de Prisma están solo en el servicio, y los errores salen por `HttpError` hacia `errorHandler`.
+- `src/routes/book.routes.js`: las rutas `GET` y `POST /:id/reviews`. `src/routes/index.js`: monta `/api/reviews`.
+
+### Pruebas en Postman
+
+La carpeta **«Taller · A · Reseñas · Yostin Sisalema»** tiene 21 peticiones con `pm.test` sobre el código y sobre el cuerpo de la respuesta: 5 de preparación (`A0`, inician sesión y crean los datos que necesita) y 16 del contrato (`A1` a `A16`). La carpeta es autónoma: no depende de las carpetas del Lab 3, solo de que la base tenga el seed (el administrador y Ana) y de que la tabla `reviews` esté migrada.
+
+| # | Petición | Resultado esperado |
+|---|---|---|
+| A1 | Crear reseña | 201, con `id`, `rating` y `comment`, sin datos sensibles |
+| A2 | Reseña repetida del mismo usuario | 409 |
+| A3 | `rating` fuera de 1 a 5 | 400 |
+| A4 | `comment` de más de 300 caracteres | 400 |
+| A5 | Crear reseña sin token | 401 |
+| A6 | Libro inexistente | 404 |
+| A7 | Reseña de otro usuario | 201 |
+| A8 | Listar reseñas (público) | 200, promedio 4, total 2, la más reciente primero y con el nombre del autor |
+| A9 | Paginación: página 2 con `limit` 1 | 200, `pages` 2 y una sola reseña |
+| A10 | Listar reseñas de un libro inexistente | 404 |
+| A11 | Eliminar la reseña de otro usuario | 403 |
+| A12 | El autor elimina su reseña | 204 sin cuerpo |
+| A13 | Eliminar una reseña que ya no existe | 404 |
+| A14 | Eliminar sin token | 401 |
+| A15 | Un ADMIN elimina la reseña de otro usuario | 204 |
+| A16 | Libro sin reseñas | 200, `average` null, `total` 0 y `data` vacía |
+
+Para ejecutarla: aplica la migración del taller (`npx prisma migrate dev`) y `npx prisma generate`, carga los datos con `npm run db:seed`, enciende la API (`npm run dev`) y en Postman usa **Run folder** sobre la carpeta.
+
+**Evidencias:** la ejecución de la carpeta pasó las 40 aserciones, con 0 fallos. Los códigos 403, 404 y 401 en rojo son los casos de error del contrato, y sus pruebas aparecen en verde porque la API responde justo el código esperado.
+
+![Run folder de la tarjeta A: 40 de 40 pruebas pasan (parte 1)](evidencias/taller-a-postman-run-1.png)
+
+![Run folder de la tarjeta A: casos de error del contrato (parte 2)](evidencias/taller-a-postman-run-2.png)
+
+
+
 ## Uso de IA
 
 - **Herramienta:** Claude (Anthropic), en su plataforma web.
