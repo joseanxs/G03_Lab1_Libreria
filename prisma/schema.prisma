@@ -1,13 +1,11 @@
-// Lab 3 · Relaciones, mapeo y consultas avanzadas
+// Lab 3 + Taller · Relaciones, mapeo y consultas avanzadas
 // Grupo: G03 · Emprendimiento: Librería Sapientia Logos
-// Relaciones: 1:1 User-Customer · 1:N Category-Book y Customer-Order · N:M Order-Book (tabla OrderItem)
-// Tras cualquier cambio: npx prisma migrate dev --name <cambio> y luego npx prisma generate
+// Relaciones: 1:1 User-Customer · N:M Category-Book (implícita) · 1:N Customer-Order · N:M Order-Book (tabla OrderItem) · 1:N Reviews · 1:N OrderStatusHistory
 
 generator client {
   provider = "prisma-client-js"
 }
 
-// Prisma 7: la URL ya no va aquí; está en prisma.config.ts
 datasource db {
   provider = "postgresql"
 }
@@ -19,19 +17,22 @@ enum Role {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   DELIVERED
   CANCELLED
 }
 
 // Usuario que se autentica con JWT
 model User {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique @db.VarChar(120)
-  password  String // hash de bcrypt, nunca la clave en texto plano
-  name      String    @db.VarChar(100)
-  role      Role      @default(USER)
-  createdAt DateTime  @default(now()) @map("created_at")
-  customer  Customer? // 1:1 → el lado sin FK
+  id            Int                  @id @default(autoincrement())
+  email         String               @unique @db.VarChar(120)
+  password      String // hash de bcrypt, nunca la clave en texto plano
+  name          String               @db.VarChar(100)
+  role          Role                 @default(USER)
+  createdAt     DateTime             @default(now()) @map("created_at")
+  customer      Customer? // 1:1 → el lado sin FK
+  reviews       Review[] // Taller A: 1:N, un usuario escribe muchas reseñas
+  statusChanges OrderStatusHistory[] // Taller C: 1:N, un usuario realiza cambios de estado
 
   @@map("users")
 }
@@ -53,7 +54,7 @@ model Customer {
   @@map("customers")
 }
 
-// Entidad del Lab 2: ahora pertenece a una categoría
+// Entidad del Lab 2: organizada en N:M con Book (Taller B)
 model Category {
   id          Int      @id @default(autoincrement())
   name        String   @unique @db.VarChar(80)
@@ -62,7 +63,7 @@ model Category {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  books       Book[] // 1:N
+  books       Book[] // Taller B: N:M implícita con Book
 
   @@map("categorias")
 }
@@ -78,26 +79,24 @@ model Book {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  // 1:N con Category. Si se borra la categoría, el libro se conserva sin categoría (SetNull)
-  categoryId Int?      @map("category_id")
-  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categories Category[] // Taller B: N:M implícita con Category (_BookToCategory)
+  items      OrderItem[] // N:M explícita con Order a través de OrderItem
+  reviews    Review[] // Taller A: 1:N, un libro recibe muchas reseñas
 
-  items OrderItem[] // N:M con Order a través de OrderItem
-
-  @@index([categoryId])
   @@map("libros")
 }
 
 // 1:N: un cliente tiene muchos pedidos; un pedido pertenece a un cliente
 // Restrict: no se puede borrar un cliente que tiene pedidos (se conserva el historial)
 model Order {
-  id         Int         @id @default(autoincrement())
-  status     OrderStatus @default(PENDING)
-  total      Decimal     @db.Decimal(10, 2)
-  createdAt  DateTime    @default(now()) @map("created_at")
-  customerId Int         @map("customer_id")
-  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  id         Int                  @id @default(autoincrement())
+  status     OrderStatus          @default(PENDING)
+  total      Decimal              @db.Decimal(10, 2)
+  createdAt  DateTime             @default(now()) @map("created_at")
+  customerId Int                  @map("customer_id")
+  customer   Customer             @relation(fields: [customerId], references: [id], onDelete: Restrict)
   items      OrderItem[]
+  history    OrderStatusHistory[] // Taller C: 1:N historial de cambios de estado
 
   @@index([customerId])
   @@index([status, createdAt]) // acelera el filtro del listado de administración
@@ -116,4 +115,37 @@ model OrderItem {
 
   @@id([orderId, bookId]) // clave primaria compuesta: un libro aparece una sola vez por pedido
   @@map("order_items")
+}
+
+// Taller · Tarjeta A: reseñas de un libro (1:N con User y con Book)
+// Cascade en ambos lados: una reseña no tiene sentido sin su autor ni sin el libro reseñado
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int      @db.SmallInt // 1 a 5 (se valida en el servicio)
+  comment   String?  @db.VarChar(300)
+  createdAt DateTime @default(now()) @map("created_at")
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookId    Int      @map("book_id")
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId]) // una reseña por usuario y libro
+  @@index([bookId]) // acelera el listado de reseñas de un libro
+  @@map("reviews")
+}
+
+// Taller · Tarjeta C: flujo de estados con historial
+model OrderStatusHistory {
+  id          Int         @id @default(autoincrement())
+  orderId     Int         @map("order_id")
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus  OrderStatus @map("from_status")
+  toStatus    OrderStatus @map("to_status")
+  note        String?     @db.VarChar(200)
+  changedById Int         @map("changed_by_id")
+  changedBy   User        @relation(fields: [changedById], references: [id], onDelete: Restrict)
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@index([orderId])
+  @@map("order_status_history")
 }

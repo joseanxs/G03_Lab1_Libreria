@@ -349,3 +349,141 @@ Con respecto al desarrollo del /client, realizamos una reunión en Live Server p
 - **Qué verificamos o modificamos nosotros:**
   - Aplicamos la migración `relaciones` y cargamos el seed en PostgreSQL, y comprobamos las tablas y las llaves foráneas en pgAdmin (`evidencias/bd.png.j- peg`).
   - Se verificó o modificó manualmente (pruebas en Postman, error 409 por FK, ROLLBACK sin stock)._
+
+---
+
+## Taller · Nuevas funcionalidades para tu emprendimiento
+
+### 6.1. Reparto de tarjetas
+
+| Integrante | Tarjeta | Rol | Funcionalidad | Rama |
+|---|---|---|---|---|
+| **Yostin Sisalema** | **A** | Desarrollador A & Integrador | Reseñas de libros: relación 1:N, clave única compuesta `@@unique([userId, bookId])`, promedio `aggregate(_avg)` y paginación. | `taller/a-yostin` |
+| **Frank Alvarado** | **B** | Desarrollador B | Categorías y búsqueda avanzada: relación N:M implícita, consultas dinámicas con filtros combinados, `some`, `contains`, ordenamiento y asignación con `set`. | `taller/b-frank` |
+| **Jose Reinoso** | **C** | Desarrollador C | Flujo de estados con historial: máquina de estados `OrderStatus`, tabla `OrderStatusHistory`, transacciones ACID con actualización condicional y reversión de stock. | `taller/c-joseReinoso` |
+
+### 6.2. Contrato de cada tarjeta
+
+#### Tarjeta A · Reseñas de libros (Yostin Sisalema)
+- **`POST /api/books/:id/reviews`**
+  - **Rol:** Usuario autenticado (`USER` o `ADMIN`).
+  - **Body:** `{ "rating": 5, "comment": "Excelente libro" }` (`rating` obligatorio entero de 1 a 5; `comment` opcional máx. 300 caracteres).
+  - **Respuestas:** `201 Created` · `400 Bad Request` (rating fuera de 1-5 o comment > 300) · `401 Unauthorized` · `404 Not Found` (libro inexistente) · `409 Conflict` (ya lo reseñó).
+  - **Ejemplo de respuesta 201:**
+    ```json
+    {
+      "id": 4,
+      "rating": 5,
+      "comment": "Excelente libro",
+      "createdAt": "2026-10-30T04:00:00.000Z",
+      "userId": 2,
+      "bookId": 1
+    }
+    ```
+- **`GET /api/books/:id/reviews?page=1&limit=10`**
+  - **Rol:** Público.
+  - **Respuestas:** `200 OK` · `404 Not Found`.
+  - **Ejemplo de respuesta 200:**
+    ```json
+    {
+      "bookId": 1,
+      "average": 4.67,
+      "total": 3,
+      "page": 1,
+      "limit": 10,
+      "pages": 1,
+      "data": [
+        {
+          "id": 1,
+          "rating": 5,
+          "comment": "Una obra de arte clásica",
+          "createdAt": "2026-10-30T04:00:00.000Z",
+          "userId": 2,
+          "bookId": 1,
+          "user": { "name": "Ana Pérez" }
+        }
+      ]
+    }
+    ```
+- **`DELETE /api/reviews/:id`**
+  - **Rol:** Autor de la reseña o `ADMIN`.
+  - **Respuestas:** `204 No Content` · `401 Unauthorized` · `403 Forbidden` (no es autor ni admin) · `404 Not Found`.
+
+#### Tarjeta B · Categorías y búsqueda avanzada (Frank Alvarado)
+- **`POST /api/categories`**
+  - **Rol:** `ADMIN`.
+  - **Body:** `{ "name": "Ciencia Ficción", "description": "Obras distópicas y futuristas" }`
+  - **Respuestas:** `201 Created` · `400 Bad Request` · `401/403` · `409 Conflict` (categoría duplicada).
+- **`GET /api/categories`**
+  - **Rol:** Público.
+  - **Respuestas:** `200 OK` (lista con conteo de libros asociados vía `_count: { books: true }`).
+- **`PUT /api/books/:id/categories`**
+  - **Rol:** `ADMIN`.
+  - **Body:** `{ "categoryIds": [1, 2] }`
+  - **Respuestas:** `200 OK` · `400 Bad Request` (no es arreglo de enteros) · `401/403` · `404 Not Found` (libro o categoría inexistente).
+- **`GET /api/books/search?q&category&min&max&sort&page&limit`**
+  - **Rol:** Público (declarado antes de `/:id` en `book.routes.js`).
+  - **Respuestas:** `200 OK` `{ page, limit, total, pages, data }` · `400 Bad Request` (sort inválido o min > max).
+- **`GET /api/categories/:id/books` (Reto opcional)**
+  - **Rol:** Público. Retorna los libros pertenecientes a una categoría con paginación.
+
+#### Tarjeta C · Flujo de estados con historial (Jose Reinoso)
+- **`PATCH /api/admin/orders/:id/status`**
+  - **Rol:** `ADMIN`.
+  - **Body:** `{ "status": "CONFIRMED", "note": "Validado en almacén" }`
+  - **Respuestas:** `200 OK` · `400 Bad Request` · `401/403` · `404 Not Found` · `409 Conflict` (transición no permitida). Al pasar a `CANCELLED`, devuelve el stock en la misma transacción.
+- **`GET /api/orders/:id/history`**
+  - **Rol:** Cliente dueño del pedido o `ADMIN`.
+  - **Respuestas:** `200 OK` · `401 Unauthorized` · `403 Forbidden` · `404 Not Found`.
+  - **Ejemplo de respuesta 200:**
+    ```json
+    {
+      "orderId": 2,
+      "status": "CONFIRMED",
+      "history": [
+        {
+          "id": 1,
+          "fromStatus": "PENDING",
+          "toStatus": "PENDING",
+          "note": "Pedido pendiente de confirmación",
+          "createdAt": "2026-10-30T04:00:00.000Z",
+          "changedBy": { "id": 2, "name": "Ana Pérez" }
+        },
+        {
+          "id": 2,
+          "fromStatus": "PENDING",
+          "toStatus": "CONFIRMED",
+          "note": "Validado en almacén",
+          "createdAt": "2026-10-30T04:05:00.000Z",
+          "changedBy": { "id": 1, "name": "Administración" }
+        }
+      ]
+    }
+    ```
+- **`PATCH /api/orders/:id/cancel`**
+  - **Rol:** Cliente autenticado (dueño del pedido).
+  - **Comportamiento:** Cancela pedidos `PENDING`, devuelve el stock y registra automáticamente el evento en `order_status_history` con nota `"Cancelado por el cliente"`.
+
+### 6.3. Decisiones de modelado en `schema.prisma`
+
+1. **`Review` (Tarjeta A):**
+   - `@db.SmallInt` para la columna `rating` (valores 1 a 5).
+   - `@@unique([userId, bookId])`: unicidad a nivel relacional que garantiza que ningún cliente califique dos veces el mismo recurso.
+   - `@@index([bookId])`: acelera consultas de filtrado y cálculo de promedio con `aggregate(_avg)`.
+   - `onDelete: Cascade` con `User` y `Book`.
+
+2. **`Category` y `Book` (Tarjeta B):**
+   - Relación N:M implícita (`books Book[]` y `categories Category[]`). Prisma genera y administra la tabla relacional `_BookToCategory`.
+   - En el servicio se aplica sincronización atómica con `set: ids.map(id => ({ id }))`.
+
+3. **`OrderStatusHistory` y `OrderStatus` (Tarjeta C):**
+   - Se añadió el estado `CONFIRMED` al enum `OrderStatus`.
+   - `OrderStatusHistory` almacena `fromStatus`, `toStatus`, `note`, `orderId` (`Cascade`) y `changedById` (`Restrict` para auditoría).
+   - Índice `@@index([orderId])`.
+
+### 6.4. Colecciones Postman y Ejecución
+
+- **Colección unificada:** `postman/G03_Taller.postman_collection.json` (incluye Lab 3 completo + Tarjetas A, B y C).
+- **Colecciones individuales disponibles:** `postman/G03_Taller_A.postman_collection.json`, `postman/G03_Taller_B.postman_collection.json`, `postman/G03_Taller_C.postman_collection.json`.
+- Todas las peticiones cuentan con tests automatizados `pm.test` cubriendo casos de éxito y de error (200, 201, 204, 400, 401, 403, 404, 409).
+- **Evidencias gráficas:** en la carpeta `evidencias/` (`taller-a-postman-run-1.png`, `taller-a-postman-run-2.png`, `postman-runB.jpeg`).
