@@ -9,5 +9,6 @@ router.use(authenticateToken);
 router.post("/", orderController.create);
 router.get("/", orderController.listMine);
 router.patch("/:id/cancel", orderController.cancel);
+router.get("/id:/history", orderController.history);
 
 module.exports = router;

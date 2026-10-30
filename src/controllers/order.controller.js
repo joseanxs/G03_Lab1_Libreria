@@ -34,4 +34,12 @@ const cancel = async (req, res, next) => {
   }
 };
 
-module.exports = { create, listMine, cancel };
+const history = async (req, res, next) => {
+  try {
+    res.json(await orderService.getHistory(req.user, parseID(req)));
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = { create, listMine, cancel, history };

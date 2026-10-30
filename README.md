@@ -341,6 +341,13 @@ Servicio y base de datos en Render:
 
 Con respecto al desarrollo del /client, realizamos una reunión en Live Server para coordinar el diseño. Al trabajar con React (un framework para el desarrollo de interfaces de usuario), nuestro enfoque principal fue estructurar y diseñar los componentes de la interfaz. En este proceso, empleamos el diagrama del [Mapa del sistema](mapa_G03_Lab1.png) como guía para el desarrollo del cliente. La estructura de estos componentes y sus conexiones mutuas se pueden apreciar en la imagen [Diseño del sistema](diseno_visual.png). Por último, cabe añadir que implementamos la plantilla del repositorio shadcn-admin.
 
+##  Taller Tarjeta C Flujo de estados con historial Jose Reinoso
+|Metodo|Ruta|Rol|Body|Respuestas|
+|----|----|----|----|----|
+|PATCH|/api/admin/orders/:id/status  | ADMIN | { status, note? } | 200 pedido · 400 id, status inválido o note > 200 · 401 · 403 · 404 · 409 transición no permitida o pedido cambiado mientras tanto |
+| GET    | /api/orders/:id/history | Dueño o ADMIN | —     | 200 { orderId, status, history } · 400 id · 401 · 403 · 404 |
+
+NOTA: reto-> la cancelación del cliente (PATCH /api/orders/:id/cancel) también se registra en el historial, dentro de la misma transacción.
 ## Uso de IA
 
 - **Herramienta:** Claude (Anthropic), en su plataforma web.
