@@ -97,7 +97,7 @@ const cancel = async (userId, orderId) => {
         fromStatus: "PENDING",
         toStatus: "CANCELLED",
         note: "Cancelado por el cliente",
-        changeById: userId,
+        changedById: userId,
       },
     });
 
@@ -110,7 +110,7 @@ const getHistory = async (user, orderId) => {
     where: { id: orderId },
     include: {
       customer: { select: { userId: true } },
-      history: {
+      orderStatusHistory: {
         orderBy: { createdAt: "asc" },
         include: { changedBy: { select: { id: true, name: true } } },
       },
@@ -120,7 +120,7 @@ const getHistory = async (user, orderId) => {
   if (user.role !== "ADMIN" && order.customer.userId !== user.id)
     throw new HttpError(403, "Este pedido no es tuyo");
 
-  return { orderId: order.id, status: order.status, history: order.history };
+  return { orderId: order.id, status: order.status, history: order.orderStatusHistory };
 };
 
 module.exports = { create, listByUser, cancel, getHistory };

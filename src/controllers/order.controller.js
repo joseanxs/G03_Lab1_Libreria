@@ -36,7 +36,7 @@ const cancel = async (req, res, next) => {
 
 const history = async (req, res, next) => {
   try {
-    res.json(await orderService.getHistory(req.user, parseID(req)));
+    res.json(await orderService.getHistory(req.user, parseId(req)));
   } catch (err) {
     next(err);
   }

@@ -348,6 +348,48 @@ Con respecto al desarrollo del /client, realizamos una reunión en Live Server p
 | GET    | /api/orders/:id/history | Dueño o ADMIN | —     | 200 { orderId, status, history } · 400 id · 401 · 403 · 404 |
 
 NOTA: reto-> la cancelación del cliente (PATCH /api/orders/:id/cancel) también se registra en el historial, dentro de la misma transacción.
+
+**Pruebas para POSTMAN**
+
+**Preparación**
+
+| # | Petición | Descripción | Resultado esperado | Estado |
+|---|----------|-------------|--------------------|--------|
+| 0a | POST /api/auth/login | Login del admin; guarda `adminToken` | 200 · `token` | Pasa |
+| 0b | POST /api/auth/login | Login del cliente; guarda `token` | 200 · `token` | Pasa |
+| 0c | GET /api/books | Elige un libro con stock; guarda `bookId` y `stockInicial` | 200 | Pasa |
+| 0d | POST /api/orders | Crea un pedido PENDING; guarda `orderId` | 201 · `id` | Pasa |
+
+**Pruebas del taller**
+
+| # | Petición | Rol / token | Caso | Código | Aserción (pm.test) | Estado |
+|---|----------|-------------|------|--------|--------------------|--------|
+| 1 | PATCH /api/admin/orders/:id/status `{status:"CONFIRMED", note}` | ADMIN | PENDING → CONFIRMED | 200 | `status === "CONFIRMED"` | Pasa |
+| 2 | GET /api/orders/:id/history | Dueño | Historial con 1 cambio | 200 | `history.length === 1` y existe `history[0].changedBy.name` | Falla (responde 400) |
+| 3 | PATCH /api/admin/orders/:id/status `{status:"XYZ"}` | ADMIN | Status inválido | 400 | existe `message` | Pasa |
+| 4 | PATCH /api/admin/orders/999999/status | ADMIN | Pedido inexistente | 404 | existe `message` | Pasa |
+| 5 | PATCH /api/admin/orders/:id/status `{status:"PENDING"}` | ADMIN | Transición no permitida | 409 | existe `message` | Por confirmar |
+| 6 | PATCH /api/admin/orders/:id/status | USER | Sin permiso de administrador | 403 | existe `message` | Pasa |
+| 7 | GET /api/orders/:id/history | Sin token | No autenticado | 401 | existe `message` | Pasa |
+| 8 | GET /api/orders/999999/history | ADMIN | Pedido inexistente | 404 | existe `message` | Pasa |
+| 9 | PATCH /api/admin/orders/:id/status `{status:"CANCELLED"}` | ADMIN | CONFIRMED → CANCELLED (devuelve stock) | 200 | `status === "CANCELLED"` | Pasa |
+| 9b | GET /api/books/:bookId | Cualquiera | El stock volvió al inicial tras cancelar | 200 | `stock === stockInicial` | Pasa |
+| 10 | GET /api/orders/:id/history | Dueño | Historial con 2 cambios | 200 | `history.length === 2` y `history[1].toStatus === "CANCELLED"` | Falla (responde 400) |
+| 11a | POST /api/orders | Dueño | (Reto) Crea un segundo pedido | 201 | guarda `orderId2` | Pasa |
+| 11b | PATCH /api/orders/:id/cancel | Dueño | (Reto) El cliente cancela su pedido | 200 | `status === "CANCELLED"` | Pasa |
+| 11c | GET /api/orders/:id/history | Dueño | (Reto) La cancelación del cliente queda en el historial | 200 | `history[0].note === "Cancelado por el cliente"` | Falla (responde 400) |
+| 12 | GET /api/orders/abc/history | ADMIN | Id no numérico | 400 | existe `message` | Por confirmar |
+
+nota->No todas las pruebas pasaron 
+
+**Evidencias tarjeta C**
+
+
+![Resultados del Run1](evidencias/taller-c-postman-run1.png)
+![Resultados del Run2](evidencias/taller-c-postman-run2.png)
+![Resultados del Run3](evidencias/taller-c-postman-run3.png)
+
+
 ## Uso de IA
 
 - **Herramienta:** Claude (Anthropic), en su plataforma web.

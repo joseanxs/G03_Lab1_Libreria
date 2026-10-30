@@ -1,0 +1,845 @@
+{
+  "info": {
+    "_postman_id": "4f2edadf-1048-461e-bf97-58ffca1ae48b",
+    "name": "G03_Taller_C · Flujo de estados con historial",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Taller · C · Jose",
+      "item": [
+        {
+          "name": "0a · Login admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@libreria.com\",\n  \"password\": \"Admin123*\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"adminToken\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0b · Login cliente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ana@correo.com\",\n  \"password\": \"Ana12345*\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0c · Elegir libro con stock",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "books"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "const libro = pm.response.json().find(b => b.available && b.stock > 0);",
+                  "pm.test(\"Hay un libro con stock\", () => pm.expect(libro).to.exist);",
+                  "pm.collectionVariables.set(\"bookId\", libro.id);",
+                  "pm.collectionVariables.set(\"stockInicial\", libro.stock);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "0d · Crear pedido PENDING",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"bookId\": {{bookId}},\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Pedido PENDING\", () => pm.expect(pm.response.json().status).to.eql(\"PENDING\"));",
+                  "pm.collectionVariables.set(\"orderId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "1 · PENDING → CONFIRMED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\",\n  \"note\": \"Pago verificado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"status CONFIRMED\", () => pm.expect(pm.response.json().status).to.eql(\"CONFIRMED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2 · Historial con 1 cambio (dueño)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}",
+                "history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"history tiene 1 registro\", () => pm.expect(j.history.length).to.eql(1));",
+                  "pm.test(\"trae el nombre de quien cambió\", () => pm.expect(j.history[0].changedBy.name).to.be.a(\"string\"));",
+                  "pm.test(\"estado actual CONFIRMED\", () => pm.expect(j.status).to.eql(\"CONFIRMED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "3 · Status inválido → 400",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"XYZ\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Trae mensaje de error\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "4 · Pedido inexistente → 404",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/orders/999999/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "orders",
+                "999999",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CONFIRMED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Trae mensaje de error\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "5 · Transición no permitida → 409",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"PENDING\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Trae mensaje de error\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "6 · Cliente intenta cambiar estado → 403",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DELIVERED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 403\", () => pm.response.to.have.status(403));",
+                  "pm.test(\"Trae mensaje de error\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "7 · Historial sin token → 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}",
+                "history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 401\", () => pm.response.to.have.status(401));",
+                  "pm.test(\"Trae mensaje de error\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "8 · Historial de pedido inexistente → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/999999/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "999999",
+                "history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 404\", () => pm.response.to.have.status(404));",
+                  "pm.test(\"Trae mensaje de error\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9 · CONFIRMED → CANCELLED",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CANCELLED\",\n  \"note\": \"Cancelado por el administrador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"status CANCELLED\", () => pm.expect(pm.response.json().status).to.eql(\"CANCELLED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9b · Stock devuelto tras cancelar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/{{bookId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "books",
+                "{{bookId}}"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"stock igual al inicial\", () => pm.expect(pm.response.json().stock).to.eql(Number(pm.collectionVariables.get(\"stockInicial\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 · Historial con 2 cambios (dueño)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId}}",
+                "history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "const j = pm.response.json();",
+                  "pm.test(\"history tiene 2 registros\", () => pm.expect(j.history.length).to.eql(2));",
+                  "pm.test(\"último cambio a CANCELLED\", () => pm.expect(j.history[1].toStatus).to.eql(\"CANCELLED\"));",
+                  "pm.test(\"orden cronológico\", () => pm.expect(j.history[0].toStatus).to.eql(\"CONFIRMED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11a · (Reto) Crear segundo pedido",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"bookId\": {{bookId}},\n      \"quantity\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"orderId2\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11b · (Reto) Cliente cancela su pedido",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId2}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId2}}",
+                "cancel"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"status CANCELLED\", () => pm.expect(pm.response.json().status).to.eql(\"CANCELLED\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11c · (Reto) Cancelación del cliente queda en el historial",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/{{orderId2}}/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "{{orderId2}}",
+                "history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 200\", () => pm.response.to.have.status(200));",
+                  "const h = pm.response.json().history;",
+                  "pm.test(\"1 registro\", () => pm.expect(h.length).to.eql(1));",
+                  "pm.test(\"nota del cliente\", () => pm.expect(h[0].note).to.eql(\"Cancelado por el cliente\"));",
+                  "pm.test(\"PENDING → CANCELLED\", () => { pm.expect(h[0].fromStatus).to.eql(\"PENDING\"); pm.expect(h[0].toStatus).to.eql(\"CANCELLED\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12 · Historial con id no numérico → 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/orders/abc/history",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "abc",
+                "history"
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Código 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Trae mensaje de error\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "adminToken",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "orderId2",
+      "value": ""
+    },
+    {
+      "key": "bookId",
+      "value": ""
+    },
+    {
+      "key": "stockInicial",
+      "value": ""
+    }
+  ]
+}
