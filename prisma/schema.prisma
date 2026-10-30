@@ -62,7 +62,7 @@ model Category {
   active      Boolean  @default(true)
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
-  books       Book[] // 1:N
+  books       Book[] // N:M implicita
 
   @@map("categorias")
 }
@@ -78,13 +78,9 @@ model Book {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  // 1:N con Category. Si se borra la categoría, el libro se conserva sin categoría (SetNull)
-  categoryId Int?      @map("category_id")
-  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
   items OrderItem[] // N:M con Order a través de OrderItem
-
-  @@index([categoryId])
+  categories Category[] // N:M implícita: Prisma crea la tabla _BookToCategory
   @@map("libros")
 }
 

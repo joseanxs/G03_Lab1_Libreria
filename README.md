@@ -327,3 +327,18 @@ Ver la tabla «Relaciones y `onDelete`» en [MODELO_ER.md](MODELO_ER.md).
 ## Uso de IA
 
 Se usó **Claude (Anthropic)** para adaptar los pasos de despliegue de Railway a Render, revisar que la URL pública respondiera (`GET /api/books` devolvió los libros en JSON) y redactar esta documentación. _Completar: qué se verificó o modificó manualmente (pruebas en Postman, error 409 por FK, ROLLBACK sin stock)._
+
+
+## Taller · Tarjeta B · Categorías y búsqueda avanzada · Alvarado Grefa Frank Marco
+
+| Método | Ruta                          | Rol      | Body                    | Respuestas |
+|--------|-------------------------------|----------|-------------------------|------------|
+| POST   | /api/categories               | ADMIN    | { name }                | 201 · 400 nombre vacío · 401 · 403 · 409 duplicada |
+| GET    | /api/categories               | Público  | —                       | 200 con _count de libros |
+| PUT    | /api/books/:id/categories     | ADMIN    | { categoryIds: [1, 2] } | 200 · 400 no es arreglo de enteros · 401 · 403 · 404 libro o categoría |
+| GET    | /api/books/search             | Público  | — (query: q, category, min, max, sort, page, limit) | 200 { page, limit, total, pages, data } · 400 sort inválido |
+
+
+Modelo: Category (N:M implícita con Book), name @unique. PUT usa `set` para reemplazar las categorías. `/search` se declara antes de `/:id` para que Express no lo confunda con un id.
+
+**Uso de IA:** usé Claude para entender y depurar errores (orden de rutas y configuración de tokens en Postman). Puedo explicar todo el código entregado.

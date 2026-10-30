@@ -5,7 +5,8 @@ const orderRoutes = require("./order.routes");
 const adminRoutes = require("./admin.routes");
 
 const router = Router();
-
+const categoryRoutes = require("./category.routes");
+router.use("/categories", categoryRoutes);
 router.use("/auth", authRoutes);
 router.use("/books", bookRoutes);
 router.use("/orders", orderRoutes);
