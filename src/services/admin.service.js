@@ -57,9 +57,48 @@ const listOrders = async ({ status, from, to, page, limit }) => {
   return { page: currentPage, limit: take, total, pages: Math.ceil(total / take), data };
 };
 
-const updateOrderStatus = async (id, status) => {
+const TRANSITIONS = {
+  PENDING: ["CONFIRMED", "CANCELED"],
+  CONFIRMED: ["DELIVERED", "CANCELLED"],
+  DELIVERED: [],
+  CANCELLED: [],
+};
+
+const updateOrderStatus = async (adminId, id, status, note) => {
   if (status === undefined) throw new HttpError(400, "Envía el nuevo status");
-  return prisma.order.update({ where: { id }, data: { status: parseStatus(status) } }); // no existe → P2025 → 404
+  parseStatus(status);
+  if (note !== undefined && (typeof note !== "string" || note.length > 200))
+    throw new HttpError(400, "note debe ser texto de máximo 200 caracteres");
+
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.findUnique({ where: { id }, include: { items: true } });
+    if (!order) throw new HttpError(404, "Pedido no encontrado");
+
+    if (!TRANSITIONS[order.status].includes(status))
+      throw new HttpError(409, `Transición no permitida: ${order.status} → ${status}`);
+
+    // Condicionado al estado actual: si otro admin lo cambió mientras tanto, count = 0
+    const { count } = await tx.order.updateMany({
+      where: { id, status: order.status },
+      data: { status },
+    });
+    if (count === 0) throw new HttpError(409, "El pedido cambió mientras tanto; vuelve a consultarlo");
+
+    if (status === "CANCELLED") {
+      for (const { bookId, quantity } of order.items) {
+        await tx.book.update({ where: { id: bookId }, data: { stock: { increment: quantity } } });
+      }
+    }
+
+    await tx.orderStatusHistory.create({
+      data: { orderId: id, fromStatus: order.status, toStatus: status, note, changedById: adminId },
+    });
+
+    return tx.order.findUnique({
+      where: { id },
+      include: { items: { include: { book: { select: { id: true, title: true } } } } },
+    });
+  });
 };
 
 // Consulta avanzada: agrupa los ítems por libro y suma unidades vendidas (sin pedidos cancelados)

@@ -15,7 +15,7 @@ const updateOrderStatus = async (req, res, next) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
     if (Number.isNaN(id)) throw new HttpError(400, "El id debe ser numérico");
-    res.json(await adminService.updateOrderStatus(id, req.body?.status));
+    res.json(await adminService.updateOrderStatus(req.user.id, id, req.body?.status, req.body?.note));
   } catch (err) {
     next(err);
   }
