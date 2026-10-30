@@ -1,4 +1,4 @@
-# Laboratorio 1 · Mini-API MVC con CRUD
+# Laboratorio 2 · Percistencia con prisma
 
 **Desarrollo Web Avanzado (A0R04) · ESPE · Unidad 1: Persistencia de datos y ORM**
 
@@ -9,9 +9,20 @@
 | Integrantes | 1. Jose Reinoso 2. Yostin Sisalema 3. Frank Alvarado |
 | NRC | 36878 |
 | Fecha | 18-10-2026 |
-| Repositorio | https://github.com/joseanxs/G03_Lab1_Libreria.git |
+| Repositorio | https://github.com/joseanxs/G03_Lab1_Libreria.git (rama lab2-prisma)|
 
-## Cómo ejecutar
+## Descripción
+ 
+La API de la librería del Lab 1 dejó de guardar sus datos en `data/books.json` y ahora los guarda en PostgreSQL a través de Prisma ORM 7.10.1 con el adaptador `@prisma/adapter-pg`. Solo cambió la capa de datos: el servicio usa Prisma y el modelo pasó de `src/models/` a `prisma/schema.prisma`. El controlador y las rutas son los del Lab 1, con una única adición, el endpoint `POST /api/books/lote`, que crea varios libros dentro de una transacción.
+
+## Requisitos
+ 
+- Node.js 20.19 o superior
+- PostgreSQL 17 (con Docker o en Neon)
+- Postman
+- Git
+
+## Cómo ejecutar la base y ejecutar
 
 ### 1. API REST en Express (src/  -> carpeta principal del proyecto)
 
@@ -21,7 +32,7 @@ cp .env.example .env      # en Windows: copy .env.example .env
 npm run dev               # http://localhost:3000 o puerto asignado
 ```
 
-Importa en Postman `postman/G03_Lab1.postman_collection.json` y ejecuta **Run collection**.
+Importa en Postman `postman/G03_Lab2.postman_collection.json` y ejecuta **Run collection**.
 
 ### 2. client/ (Usando React con Vite)
 
@@ -32,64 +43,195 @@ npm run dev
 ```
 Credenciales de prueba (precargadas): admin@espe.edu.ec / admin
 
-
-### Estructura MVC en capas
-
+### 3. Crear la base de datos
+**Opción A: PostgreSQL 17 con Docker**
+ 
+```bash
+docker compose up -d
 ```
+ 
+Crea un contenedor `lab2-postgres` con usuario `espe_user`, clave `espe_password`, base `espe_db` y puerto `5432`. Para detenerlo: `docker compose down`.
+
+### 4. Migrar, generar el cliente y cargar datos
+ 
+```bash
+npm run db:migrate     # aplica las migraciones de prisma/migrations
+npm run db:generate    # Prisma 7 genera el cliente por separado
+npm run db:seed        # carga los datos de prueba
+npm run dev            # API en http://localhost:3000
+```
+ 
+| Script | Comando de Prisma | Qué hace |
+|---|---|---|
+| `npm run db:migrate` | `prisma migrate dev` | Crea las tablas a partir del schema y registra la migración |
+| `npm run db:generate` | `prisma generate` | Genera el cliente de Prisma. Se ejecuta después de cada migración |
+| `npm run db:seed` | `prisma db seed` | Borra los datos y carga 4 libros y 3 categorías |
+| `npm run db:studio` | `prisma studio` | Abre Prisma Studio en el navegador para ver las tablas |
+
+
+## Estructura del proyecto
+ 
+```
+prisma/
+├─ schema.prisma         ← modelo de datos (reemplaza a src/models/)
+├─ migrations/           ← migraciones versionadas en Git (init + migration_lock.toml)
+└─ seed.js               ← datos de prueba, se puede repetir
+prisma.config.ts         ← URL de la base y comando del seed (Prisma 7)
+docker-compose.yml       ← PostgreSQL 17 opcional
+.env.example             ← plantilla de variables, sin claves reales
 src/
-├─ app.js            ← arma la app: express.json, middlewares y prefijo /api
-├─ server.js         ← solo levanta el servidor (lee .env)
+├─ app.js                ← express.json, logger, CORS, prefijo /api y manejo de errores
+├─ server.js             ← conecta Prisma y levanta el servidor
+├─ db/prisma.js          ← única instancia de PrismaClient (adaptador PrismaPg)
 ├─ routes/
-│  ├─ index.js       ← archivo principal: monta cada recurso (/api/books)
-│  └─ book.routes.js ← verbo + URL → acción del controlador
+│  ├─ index.js           ← monta /api/books
+│  └─ book.routes.js     ← verbo + URL → acción del controlador
 ├─ controllers/
 │  └─ book.controller.js ← lee req, llama al servicio, decide código + JSON
 ├─ services/
-│  └─ book.service.js    ← reglas de negocio, validaciones y acceso a datos
-├─ models/
-│  └─ book.model.js      ← campos de la entidad y archivo JSON (Lab 2: schema.prisma)
-├─ middlewares/      ← logger, notFound, errorHandler
+│  └─ book.service.js    ← validaciones y todas las consultas a Prisma
+├─ middlewares/          ← logger, notFound, errorHandler
 └─ utils/httpError.js
-data/
-└─ books.json        ← archivo JSON con los registros de libros
-client/
-├─ src/
-│  ├─ api/                  ← configuración de Axios y endpoints
-│  ├─ components/           ← componentes de interfaz (AuthModal, BookCard, BookForm)
-│  ├─ context/              ← BookProvider y hooks de autenticación (useBooks, useAuth)
-│  ├─ pages/                ← páginas principales (AuthPage, BookListPage, NotFoundPage)
-│  ├─ hooks/                ← hooks personalizados (useLogin)
-│  ├─ utils/                ← utilidades de UI y formato
-│  └─ main.jsx, App.jsx     ← entry point y layout principal
-└─ public/                  ← imágenes y otros recursos estáticos
+postman/G03_Lab2.postman_collection.json
+evidencias/              ← capturas de Postman y Prisma Studio
+MODELO_ER.md             ← diagrama ER del emprendimiento
+client/                  ← interfaz en React del Lab 1 (no se modificó en este laboratorio)
 ```
-
-Flujo de una petición: **ruta → controlador → servicio → modelo** y de vuelta. El proyecto usa CommonJS (`require` / `module.exports`).
-
+ 
+Flujo de una petición: **ruta → controlador → servicio → Prisma → PostgreSQL** y de vuelta. Las consultas de Prisma están solo en `src/services/`. Las carpetas `data/` y `src/models/` ya no existen. El proyecto usa CommonJS (`require` / `module.exports`).
+ 
+## Modelo de datos
+ 
+El diagrama completo con cardinalidades está en [MODELO_ER.md](MODELO_ER.md). En este laboratorio se declaran las cuatro entidades en `schema.prisma`, todavía sin `@relation`. Las relaciones se programan en el Lab 3.
+ 
+| Modelo Prisma | Tabla | Campos principales | Restricciones |
+|---|---|---|---|
+| `Book` | `libros` | `id`, `title` (columna `titulo`), `author`, `price`, `available`, `stock`, `createdAt`, `updatedAt` | `title` único, `VarChar(80)`; `available` por defecto `true`; `stock` por defecto `0` |
+| `Category` | `categorias` | `id`, `name`, `description`, `aisle`, `active`, `createdAt`, `updatedAt` | `name` único; `description` opcional (`?`), `VarChar(255)` |
+| `Sale` | `sales` | `id`, `invoiceCode`, `customerName`, `customerEmail`, `total`, `saleDate` | `invoiceCode` único; `customerEmail` opcional; `saleDate` por defecto `now()` |
+| `SaleItem` | `sale_items` | `id`, `quantity`, `unitPrice`, `saleId`, `bookId` | `saleId` y `bookId` son columnas sin relación hasta el Lab 3 |
+ 
+Atributos de Prisma usados: `@id @default(autoincrement())`, `@unique`, `@default`, `@db.VarChar(n)`, campos opcionales con `?`, `@map` y `@@map`, y `@updatedAt`.
+ 
 ## Endpoints de la entidad
-
+ 
+Ruta base: `/api/books`.
+ 
 | Verbo | Ruta | Acción | Éxito | Errores |
 |---|---|---|---|---|
-| GET | `/api/books` | Listar todos los libros | 200 | — |
+| GET | `/api/books` | Listar todos los libros | 200 | n/a |
 | GET | `/api/books/:id` | Ver un libro por su ID | 200 | 400, 404 |
-| POST | `/api/books` | Crear un libro con datos validados | 201 | 400 |
-| PUT | `/api/books/:id` | Actualizar campos de un libro existente | 200 | 400, 404 |
+| POST | `/api/books` | Crear un libro con datos validados | 201 | 400, 409 |
+| PUT | `/api/books/:id` | Actualizar campos de un libro existente | 200 | 400, 404, 409 |
 | DELETE | `/api/books/:id` | Eliminar un libro por su ID | 204 | 400, 404 |
-
+| POST | `/api/books/lote` | Crear varios libros en una transacción | 201 | 400, 409 |
+| DELETE | `/api/books` | Eliminar todos los libros (solo para pruebas) | 204 | n/a |
+ 
+### Manejo de errores
+ 
+`errorHandler.js` traduce los errores de Prisma a códigos HTTP y responde siempre con el mismo formato:
+ 
+```json
+{ "status": "error", "statusCode": 409, "message": "Ya existe un registro con ese valor único" }
+```
+ 
+| Origen | Código HTTP | Cuándo ocurre |
+|---|---|---|
+| Prisma `P2002` | 409 | Valor único repetido (por ejemplo, un `title` que ya existe) |
+| Prisma `P2025` | 404 | El registro que se quiere actualizar o borrar no existe |
+| Prisma `P2000` | 400 | Un valor excede la longitud permitida de la columna |
+| `HttpError` | el que indique | Validaciones del servicio (400) y libro inexistente (404) |
+| Cualquier otro | 500 | Error inesperado; el mensaje interno no se muestra al cliente |
+ 
 ## Validaciones del servicio
-
-1. **Título (`title`)**: Obligatorio en creación (`POST`) y validado si se envía en actualización (`PUT`). Debe ser una cadena de texto no vacía de al menos 2 caracteres. Si no cumple, lanza `HttpError(400, "El título del libro debe tener al menos 2 caracteres")`.
-2. **Precio (`price`)**: Obligatorio en creación y validado si se envía en actualización. Debe ser un valor numérico finito estrictamente mayor a 0 (`price > 0`). Si no cumple, lanza `HttpError(400, "El precio debe ser un número mayor a 0")`.
-3. **Autor (`author`)**: Si se proporciona, debe ser una cadena de texto de al menos 2 caracteres.
-4. **Disponibilidad (`available`)**: Si se proporciona, debe ser un valor de tipo booleano (`true` o `false`).
-
-## Aporte de cada integrante
-
+ 
+Las validaciones están en `validate()` dentro de `src/services/book.service.js`. En `PUT` solo se validan los campos que se envían.
+ 
+1. **Título (`title`)**: obligatorio al crear, texto de al menos 2 caracteres y máximo 80. Debe ser único; si se repite responde 409.
+2. **Precio (`price`)**: obligatorio al crear, número finito mayor a 0.
+3. **Autor (`author`)**: obligatorio al crear, texto de al menos 2 caracteres y máximo 80.
+4. **Stock (`stock`)**: si se envía, entero mayor o igual a 0. Si no se envía, vale 0.
+5. **Disponibilidad (`available`)**: si se envía, booleano (`true` o `false`). Por defecto es `true`.
+6. **Identificador (`:id`)**: debe ser numérico; si no, responde 400.
+Cualquier incumplimiento lanza `HttpError(400, mensaje)`.
+ 
+## Transacción: `POST /api/books/lote`
+ 
+El endpoint recibe un arreglo de libros y los guarda con `prisma.$transaction(async (tx) => ...)`. Dentro de la transacción, el servicio valida cada ítem y lo crea con `tx.book.create`, no con `prisma`. Si todos pasan, Prisma confirma la transacción (**COMMIT**) y responde 201 con los libros creados. Si un ítem falla por una validación (400) o por un valor único repetido (409), el error cancela la transacción (**ROLLBACK**) y no queda ningún libro del lote en la base.
+ 
+**COMMIT (201)**
+ 
+```json
+[
+  { "title": "El Principito", "author": "Antoine de Saint-Exupéry", "price": 9.5, "stock": 10 },
+  { "title": "Rayuela", "author": "Julio Cortázar", "price": 14, "stock": 6 }
+]
+```
+ 
+**ROLLBACK por ítem inválido (400).** El segundo libro tiene precio negativo, por lo que tampoco se guarda el primero:
+ 
+```json
+[
+  { "title": "Libro que se deshace", "author": "Autor Uno", "price": 10 },
+  { "title": "Libro inválido", "author": "Autor Dos", "price": -5 }
+]
+```
+ 
+Respuesta: `"message": "Ítem 2: El precio debe ser un número mayor a 0"`.
+ 
+**ROLLBACK por título repetido (409).** El segundo título ya existe en el seed (`Romeo y Julieta`), así que el primero tampoco se guarda:
+ 
+```json
+[
+  { "title": "Otro libro que se deshace", "author": "Autor Uno", "price": 10 },
+  { "title": "Romeo y Julieta", "author": "William Shakespeare", "price": 10.5 }
+]
+```
+ 
+Si el cuerpo no es un arreglo o llega vacío, el controlador responde 400 con el mensaje `El body debe ser un arreglo con al menos un libro`.
+ 
+## Pruebas en Postman
+ 
+Importa `postman/G03_Lab2.postman_collection.json`, deja la URL base en `http://localhost:3000`, ejecuta antes `npm run db:seed` y usa **Run collection**. La colección tiene 14 peticiones:
+ 
+| # | Petición | Resultado esperado |
+|---|---|---|
+| 1 | Listar libros | 200 |
+| 2 | Crear libro | 201 |
+| 3 | Crear con title repetido | 409 |
+| 4 | Crear con datos inválidos | 400 |
+| 5 | Ver un libro | 200 |
+| 6 | Actualizar libro | 200 |
+| 7 | Eliminar libro | 200 / 204 |
+| 8 | Verificar eliminación | 404 |
+| 9 | Actualizar inexistente | 404 (Prisma P2025) |
+| 10 | Lote válido | 201 (COMMIT) |
+| 11 | Lote con ítem inválido | 400 (ROLLBACK) |
+| 12 | Lote con title repetido del seed | 409 (ROLLBACK) |
+| 13 | Verificar ROLLBACK | Ningún ítem de los lotes fallidos existe y el lote válido sí |
+| 14 | Body que no es arreglo | 400 |
+ 
+### Evidencias
+ 
+Ejecución de la colección en Postman:
+ 
+![Run collection, parte 1](evidencias/postman-run2.1.png.jpeg)
+ 
+![Run collection, parte 2: transacción /lote](evidencias/postman-run2.2.png.jpeg)
+ 
+Prisma Studio con las tablas creadas por la migración y los datos del seed:
+ 
+![Prisma Studio: esquema](evidencias/prisma-studio1.png.jpeg)
+ 
+![Prisma Studio: tabla libros](evidencias/prisma-studio2.png.jpeg)
+ 
+## Aporte de cada integrante (Lab 2)
+ 
 | Integrante | Rol | Qué hizo (archivos / pasos) |
 |---|---|---|
-| **Jose Reinoso** | Integrante 1: El Arquitecto (Propuesta, Modelo y Validaciones) | • **Documentación base**: Llenado completo de la información del emprendimiento en `PROPUESTA.md` (problema, funciones, 3 entidades).<br>• **Base de datos JSON**: Estructuración del archivo `data/books.json` con los registros iniciales.<br>• **Modelo**: Configuración del arreglo `FIELDS` en `src/models/book.model.js` con los campos obligatorios (`id`, `author`, `title`, `price`, `available`).<br>• **Reglas de negocio**: Programación de la función `validate()` en `src/services/book.service.js` con las validaciones requeridas (`title` y `price`).<br>• **Cierre documental**: Completado inicial de `README.md` con tabla de endpoints y estructura general. |
-| **Yostin Sisalema** | Integrante 2: El Motor de la API (Servicio, Controlador y Rutas) | • **Renombrar y enrutar**: Renombrado de archivos a la entidad `book` en `src/` y montaje de la ruta base `/books` en `src/routes/index.js`.<br>• **Capa de Servicio**: Implementación de las funciones `create`, `update` y `remove` en `src/services/book.service.js` para persistencia en JSON, autoincremento de ID y lanzamiento de error 404.<br>• **Capa de Controlador**: Implementación de `create` (201), `update` (200) y `remove` (204) en `src/controllers/book.controller.js` delegando errores a `next(err)`.<br>• **Capa de Rutas**: Conexión de verbos y rutas relativas (`POST /`, `PUT /:id`, `DELETE /:id`) en `src/routes/book.routes.js`. |
-| **Frank Alvarado** | Integrante 3: Control de Calidad (Middlewares, Postman y Empaquetado) | • **Middlewares**: Configuración y revisión de `logger.js` (registro de método, ruta y hora en consola) y `errorHandler.js` / `notFound.js` (captura de errores 400, 404, 500).<br>• **Pruebas en Postman**: Ajuste de la colección `postman/G03_Lab1.postman_collection.json` con las peticiones de `/api/books`, ejecución de *Run Collection* y verificación de pruebas en verde.<br>• **Evidencias y Empaquetado**: Captura de registros del logger (`evidencias/logger.png`), capturas de ejecución de Postman (`evidencias/postman-run.png`), exportación de colección v2.1 y preparación del ZIP final para entrega. |
+| **Yostin Sisalema** | Integrante 1: Configuración de Prisma y modelo de datos | • **Instalación y configuración**: versiones fijas de Prisma 7.10.1, `prisma.config.ts`, `src/db/prisma.js`, `.env.example` y `docker-compose.yml`.<br>• **Modelo ER**: diagrama en `MODELO_ER.md`.<br>• **Schema**: `prisma/schema.prisma` con los modelos `Book`, `Category`, `Sale` y `SaleItem`. |
+| **Jose Reinoso** | Integrante 2: Migración, seed y servicio con Prisma | • **Migración y seed**: `prisma/migrations/` (migración `init`) y `prisma/seed.js`.<br>• **Servicio**: reemplazo del archivo JSON por Prisma en `src/services/book.service.js` (`create`, `update`, `remove` y `createMany` con `$transaction`).<br>• **Controlador y rutas**: `createMany` y la ruta `POST /lote`.<br>• **Limpieza**: conexión en `server.js` y retiro de `data/` y `src/models/`. |
+| **Frank Alvarado** | Integrante 3: Errores, pruebas y evidencias | • **Manejo de errores**: `errorHandler.js` con 409, 404 y 400 de Prisma.<br>• **Postman**: colección con el CRUD y las pruebas de COMMIT y ROLLBACK.<br>• **Evidencias**: capturas de Postman y Prisma Studio en `evidencias/`.<br>• **Documentación**: este `README.md` y el empaquetado de la entrega. |
 
 ### Nota Adiccional: Sobre el desarrollo del /client
 
@@ -103,3 +245,100 @@ Con respecto al desarrollo del /client, realizamos una reunión en Live Server p
     -- Para reforzar conceptos sobre los temas de arquitectura en capas vistos en clase. 
     -- Para consultar ejemplos de sintaxis en JavaScript y estructuración de componentes en librerías como React, utilizándolos como referencia. 
 - Qué verificamos o corregimos nosotros: Lógica de negocio de la entidad `book`, nombres y tipos de atributos en `data/books.json`, validación de datos para evitar IDs repetidos y asegurar que los campos obligatorios estén completos y sean coherentes, enrutamiento relativo sin duplicación de prefijos `/books`, manejo de los 4 estados de interfaz en client/, y verificación de peticiones `POST`, `PUT` y `DELETE` en Postman.
+
+
+---
+
+# Lab 3 · Autenticación, relaciones, transacciones y despliegue
+
+| Dato | Valor |
+|---|---|
+| URL pública (Render) | https://g03-lab1-libreria.onrender.com |
+| Rama | _completar: nombre de la rama del grupo_ |
+
+> **Nota:** el enunciado sugiere Railway; se desplegó en **Render**, que ofrece lo mismo (PostgreSQL administrado + Web Service conectado a GitHub). En el plan gratuito de Render el servicio se suspende por inactividad, por lo que la primera petición puede tardar en responder.
+
+## Usuarios de prueba (seed)
+
+| Rol | Email | Contraseña |
+|---|---|---|
+| ADMIN | admin@libreria.com | Admin123* |
+| USER | ana@correo.com | Ana12345* |
+
+## Cómo ejecutar el Lab 3
+
+```bash
+npm install
+cp .env.example .env            # agrega JWT_SECRET
+npx prisma migrate dev --name relaciones
+npx prisma generate
+npx prisma db seed
+npm run dev
+```
+
+## Despliegue en Render
+
+1. Crear una base **PostgreSQL** en Render y copiar su *Internal Database URL* y su *External Database URL*.
+2. Crear un **Web Service** conectado al repositorio de GitHub.
+3. **Build Command:** `npm install && npx prisma generate`
+4. **Start Command:** `npx prisma migrate deploy && node src/server.js`
+5. **Variables de entorno:** `DATABASE_URL` (Internal), `JWT_SECRET` y `NODE_ENV=production`.
+6. **Seed:** ejecutado desde local contra la *External Database URL* (equivalente a `DATABASE_PUBLIC_URL` en Railway).
+
+## Manejo de errores de clave foránea
+
+El middleware `src/middlewares/errorHandler.js` captura el error de Prisma `P2003` (restricción de clave foránea con `onDelete: Restrict`) y responde `409 Conflict`.
+
+## Endpoints
+
+| Método | Ruta | Rol | Códigos |
+|---|---|---|---|
+| POST | /api/auth/register | público | 201, 400, 409 |
+| POST | /api/auth/login | público | 200, 400, 401 |
+| GET | /api/auth/me | token | 200, 401, 403 |
+| GET | /api/books · /api/books/:id | público | 200, 404 |
+| POST · PUT · DELETE | /api/books · /api/books/:id · /api/books/lote | ADMIN | 201/200/204, 400, 401, 403, 404, 409 |
+| POST | /api/orders | USER | 201, 400, 401, 404, 409 (sin stock, ROLLBACK) |
+| GET | /api/orders | USER | 200, 401 |
+| PATCH | /api/orders/:id/cancel | USER (dueño) | 200, 403, 404, 409 |
+| GET | /api/admin/orders?status&from&to&page&limit | ADMIN | 200 `{ page, limit, total, pages, data }`, 400, 403 |
+| PATCH | /api/admin/orders/:id/status | ADMIN | 200, 400, 404 |
+| GET | /api/admin/reports/top-books?limit | ADMIN | 200 |
+
+## Pruebas en Postman
+
+Colección de 25 peticiones (`postman/G03_Lab3.postman_collection.json`) adaptada a las rutas de la librería, ejecutada en local y contra Render.
+
+- `evidencias/postman-local.png`
+- `evidencias/railway-run.png` (captura de la ejecución en **Render**; se mantiene el nombre que pide la rúbrica)
+
+## Decisiones de `onDelete`
+
+Ver la tabla «Relaciones y `onDelete`» en [MODELO_ER.md](MODELO_ER.md).
+
+## Aporte de cada integrante
+
+| Integrante | Aporte |
+|---|---|
+| Jose Reinoso | _completar_ |
+| Yostin Sisalema | _completar_ |
+| Frank Alvarado | _completar_ |
+
+## Uso de IA
+
+Se usó **Claude (Anthropic)** para adaptar los pasos de despliegue de Railway a Render, revisar que la URL pública respondiera (`GET /api/books` devolvió los libros en JSON) y redactar esta documentación. _Completar: qué se verificó o modificó manualmente (pruebas en Postman, error 409 por FK, ROLLBACK sin stock)._
+
+
+## Taller · Tarjeta B · Categorías y búsqueda avanzada · Alvarado Grefa Frank Marco
+
+| Método | Ruta                          | Rol      | Body                    | Respuestas |
+|--------|-------------------------------|----------|-------------------------|------------|
+| POST   | /api/categories               | ADMIN    | { name }                | 201 · 400 nombre vacío · 401 · 403 · 409 duplicada |
+| GET    | /api/categories               | Público  | —                       | 200 con _count de libros |
+| PUT    | /api/books/:id/categories     | ADMIN    | { categoryIds: [1, 2] } | 200 · 400 no es arreglo de enteros · 401 · 403 · 404 libro o categoría |
+| GET    | /api/books/search             | Público  | — (query: q, category, min, max, sort, page, limit) | 200 { page, limit, total, pages, data } · 400 sort inválido |
+
+
+Modelo: Category (N:M implícita con Book), name @unique. PUT usa `set` para reemplazar las categorías. `/search` se declara antes de `/:id` para que Express no lo confunda con un id.
+
+**Uso de IA:** usé Claude para entender y depurar errores (orden de rutas y configuración de tokens en Postman). Puedo explicar todo el código entregado.

@@ -1,8 +1,8 @@
 /*
- * Laboratorio 1 · Mini-API MVC con CRUD
+ * Laboratorio 2 · Mini-API MVC con CRUD
  * Desarrollo Web Avanzado (A0R04) · ESPE
  * Grupo: G03 · Emprendimiento: Libreria Sapientia Logos
- * Integrantes: Frank Alvarado, Jose Reinoso, Yostin Sisalema· NRC: 36878 · Fecha: 18/10/2026
+ * Integrantes: Frank Alvarado, Jose Reinoso, Yostin Sisalema· NRC: 36878 · Fecha: 22/10/2026
  */
 const express = require("express");
 const routes = require("./routes");
@@ -28,7 +28,7 @@ app.use((req, res, next) => {
 });
 
 // 2. Rutas: todas cuelgan del prefijo /api (ver routes/index.js)
-app.get("/", (req, res) => res.json({ api: "Lab 1 · Mini-API MVC", estado: "ok" }));
+app.get("/", (req, res) => res.json({ api: "Lab 2 · Percistencia con prisma", estado: "ok" }));
 app.use("/api", routes);
 
 // 3. Middlewares que actúan DESPUÉS: ruta no encontrada y manejo de errores (siempre al final)

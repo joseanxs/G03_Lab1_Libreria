@@ -1,0 +1,667 @@
+{
+  "info": {
+    "name": "G03_Taller · Tarjeta B (carpeta para unir a la colección del grupo)",
+    "description": "Carpeta de pruebas de la tarjeta B. Variables: baseUrl, token (USER), adminToken (ADMIN), adminEmail, adminPassword, userEmail, userPassword.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Taller · B · ALVARADO GREFA FRANK MARCO",
+      "item": [
+        {
+          "name": "B0. (Opcional) Login admin",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"adminToken\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B0c. (Opcional) Registrar usuario USER",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Usuario Test\",\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created o 409 si ya existe\", () => pm.expect([201, 409]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B0d. (Opcional) Login USER",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{userEmail}}\",\n  \"password\": \"{{userPassword}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"token\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B0b. (Opcional) Tomar un libro existente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books"]
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test(\"Hay al menos un libro\", () => pm.expect(list.length).to.be.above(0));",
+                  "if (!pm.collectionVariables.get(\"bookId\")) pm.collectionVariables.set(\"bookId\", list[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B1. Crear categoría (201)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Novela {{$timestamp}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "const c = pm.response.json();",
+                  "pm.test(\"Devuelve id y name\", () => { pm.expect(c).to.have.property(\"id\"); pm.expect(c.name).to.include(\"Novela\"); });",
+                  "pm.collectionVariables.set(\"categoryId\", c.id);",
+                  "pm.collectionVariables.set(\"catName\", c.name);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B2. Categoría duplicada (409)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{catName}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"409 Conflict\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Trae mensaje de error\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B3. Categoría sin nombre (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"Trae mensaje de error\", () => pm.expect(pm.response.json()).to.have.property(\"message\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B4. Crear categoría sin token (401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sin token\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 Unauthorized\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B5. Crear categoría con rol USER (403)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Sin permiso\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"403 Forbidden\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B6. Listar categorías con _count (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "const list = pm.response.json();",
+                  "pm.test(\"Es un arreglo\", () => pm.expect(list).to.be.an(\"array\"));",
+                  "pm.test(\"Cada categoría trae _count\", () => list.forEach((c) => pm.expect(c).to.have.property(\"_count\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B7. Crear segunda categoría (201)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ensayo {{$timestamp}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"categoryId2\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B8. Asignar categorías al libro con set (200)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/{{bookId}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books", "{{bookId}}", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryIds\": [{{categoryId}}, {{categoryId2}}]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"El libro queda con 2 categorías\", () => pm.expect(pm.response.json().categories).to.have.length(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B9. categoryIds no es arreglo (400)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/{{bookId}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books", "{{bookId}}", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryIds\": \"uno\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B10. Libro inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/999999/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books", "999999", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryIds\": [{{categoryId}}]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B11. Categoría inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/{{bookId}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books", "{{bookId}}", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryIds\": [999999]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{adminToken}}", "type": "string" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"404 Not Found\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B12. Asignar categorías sin token (401)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/{{bookId}}/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books", "{{bookId}}", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryIds\": [{{categoryId}}]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"401 Unauthorized\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B13. Búsqueda con texto y orden por precio (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/search?q=a&sort=price_asc&page=1&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books", "search"],
+              "query": [
+                { "key": "q", "value": "a" },
+                { "key": "sort", "value": "price_asc" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Respuesta paginada\", () => pm.expect(r).to.include.keys(\"page\", \"limit\", \"total\", \"pages\", \"data\"));",
+                  "pm.test(\"Máximo 5 resultados\", () => pm.expect(r.data.length).to.be.at.most(5));",
+                  "pm.test(\"Orden ascendente por precio\", () => { const p = r.data.map((b) => Number(b.price)); pm.expect(p).to.eql([...p].sort((a, b) => a - b)); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B14. Búsqueda por categoría (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/search?category={{catName}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books", "search"],
+              "query": [{ "key": "category", "value": "{{catName}}" }]
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Encuentra el libro asignado\", () => pm.expect(pm.response.json().data.length).to.be.above(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B15. Búsqueda por rango de precio (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/search?min=10&max=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books", "search"],
+              "query": [
+                { "key": "min", "value": "10" },
+                { "key": "max", "value": "20" }
+              ]
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Todos entre 10 y 20\", () => pm.response.json().data.forEach((b) => { pm.expect(Number(b.price)).to.be.within(10, 20); }));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B16. sort inválido (400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/books/search?sort=barato",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "books", "search"],
+              "query": [{ "key": "sort", "value": "barato" }]
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "B17. (Reto) Libros de una categoría (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}/products?page=1&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "categories", "{{categoryId}}", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "5" }
+              ]
+            },
+            "auth": { "type": "noauth" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"200 OK\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Respuesta paginada\", () => pm.expect(pm.response.json()).to.include.keys(\"page\", \"limit\", \"total\", \"pages\", \"data\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "adminEmail", "value": "admin@libreria.com" },
+    { "key": "adminPassword", "value": "Admin123*" },
+    { "key": "userEmail", "value": "user@libreria.com" },
+    { "key": "userPassword", "value": "User123*" },
+    { "key": "token", "value": "" },
+    { "key": "adminToken", "value": "" },
+    { "key": "catName", "value": "" },
+    { "key": "categoryId", "value": "" },
+    { "key": "categoryId2", "value": "" },
+    { "key": "bookId", "value": "" }
+  ]
+}
