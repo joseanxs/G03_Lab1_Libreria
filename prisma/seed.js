@@ -12,7 +12,7 @@ async function main() {
     await prisma.book.deleteMany();
     await prisma.category.deleteMany();
 
-    // 2. Categorías y catálogo (1:N)
+    // 2. Categorías y catálogo (N:M)
     const novela = await prisma.category.create({
         data: { name: "Novela", description: "Narrativa de ficción de largo aliento", aisle: "A1", active: true }
     });
@@ -23,16 +23,49 @@ async function main() {
         data: { name: "Clásicos", aisle: "C3", active: true }
     });
 
-    await prisma.book.createMany({
-        data: [
-            { title: "Romeo y Julieta", author: "William Shakespeare", price: 10.5, available: true, stock: 12, categoryId: clasicos.id },
-            { title: "Cien años de soledad", author: "Gabriel García Márquez", price: 15, available: true, stock: 8, categoryId: novela.id },
-            { title: "1984", author: "George Orwell", price: 13.5, available: true, stock: 20, categoryId: novela.id },
-            { title: "Los sabuesos de Baskerville", author: "Arthur Conan Doyle", price: 22, available: false, stock: 0, categoryId: misterio.id },
-        ],
+    // createMany no admite relaciones: cada libro se crea con create + connect
+    await prisma.book.create({
+        data: {
+            title: "Romeo y Julieta",
+            author: "William Shakespeare",
+            price: 10.5,
+            available: true,
+            stock: 12,
+            categories: { connect: { id: clasicos.id } },
+        },
+    });
+    await prisma.book.create({
+        data: {
+            title: "Cien años de soledad",
+            author: "Gabriel García Márquez",
+            price: 15,
+            available: true,
+            stock: 8,
+            categories: { connect: { id: novela.id } },
+        },
+    });
+    await prisma.book.create({
+        data: {
+            title: "1984",
+            author: "George Orwell",
+            price: 13.5,
+            available: true,
+            stock: 20,
+            categories: { connect: { id: novela.id } },
+        },
+    });
+    await prisma.book.create({
+        data: {
+            title: "Los sabuesos de Baskerville",
+            author: "Arthur Conan Doyle",
+            price: 22,
+            available: false,
+            stock: 0,
+            categories: { connect: { id: misterio.id } },
+        },
     });
 
-    // 3. Usuarios con perfil (1:1) 
+    // 3. Usuarios con perfil (1:1)
     await prisma.user.create({
         data: { email: "admin@libreria.com", password: await bcrypt.hash("Admin123*", 10), name: "Administración", role: "ADMIN" },
     });
@@ -58,8 +91,7 @@ async function main() {
     });
 
     console.log(
-        `Seed listo: ${await prisma.book.count()} libros, ${await prisma.category.count()} 
-    categorías, ${await prisma.user.count()} usuarios, ${await prisma.order.count()} pedidos`
+        `Seed listo: ${await prisma.book.count()} libros, ${await prisma.category.count()} categorías, ${await prisma.user.count()} usuarios, ${await prisma.order.count()} pedidos`
     );
 }
 

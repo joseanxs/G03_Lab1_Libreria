@@ -55,10 +55,7 @@ const validate = (data, { partial = false } = {}) => {
     }
   }
 
-  // Categoría (opcional): entero o null
-  if (llega("categoryId") && data.categoryId !== null && !Number.isInteger(data.categoryId)) {
-    return "categoryId debe ser un entero o null";
-  }
+  // Las categorías (N:M) ya no se validan aquí: se asignan con PUT /api/books/:id/categories
 
   return null;
 };
@@ -105,4 +102,4 @@ const createMany = (items) =>
     return created;
   });
 
-module.exports = { list, getById, create, update, remove, removeAll, createMany }
+module.exports = { list, getById, create, update, remove, removeAll, createMany };

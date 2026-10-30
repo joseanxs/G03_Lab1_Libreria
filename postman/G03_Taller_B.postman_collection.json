@@ -625,9 +625,9 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/api/categories/{{categoryId}}/products?page=1&limit=5",
+              "raw": "{{baseUrl}}/api/categories/{{categoryId}}/books?page=1&limit=5",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "categories", "{{categoryId}}", "products"],
+              "path": ["api", "categories", "{{categoryId}}", "books"],
               "query": [
                 { "key": "page", "value": "1" },
                 { "key": "limit", "value": "5" }

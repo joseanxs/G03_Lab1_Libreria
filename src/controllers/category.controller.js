@@ -46,7 +46,7 @@ const search = async (req, res, next) => {
   }
 };
 
-// RETO · GET /api/categories/:id/products → 200
+// RETO · GET /api/categories/:id/books → 200
 const booksByCategory = async (req, res, next) => {
   try {
     res.json(await categoryService.booksByCategory(parseId(req), req.query));
