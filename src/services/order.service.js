@@ -91,8 +91,36 @@ const cancel = async (userId, orderId) => {
       await tx.book.update({ where: { id: bookId }, data: { stock: { increment: quantity } } });
     }
 
+    await tx.orderStatusHistory.create({
+      data: {
+        orderId,
+        fromStatus: "PENDING",
+        toStatus: "CANCELLED",
+        note: "Cancelado por el cliente",
+        changedById: userId,
+      },
+    });
+
     return tx.order.findUnique({ where: { id: orderId }, include: orderInclude });
   });
 };
 
-module.exports = { create, listByUser, cancel };
+const getHistory = async (user, orderId) => {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      customer: { select: { userId: true } },
+      orderStatusHistory: {
+        orderBy: { createdAt: "asc" },
+        include: { changedBy: { select: { id: true, name: true } } },
+      },
+    },
+  });
+  if (!order) throw new HttpError(404, "Pedido no encontrado");
+  if (user.role !== "ADMIN" && order.customer.userId !== user.id)
+    throw new HttpError(403, "Este pedido no es tuyo");
+
+  return { orderId: order.id, status: order.status, history: order.orderStatusHistory };
+};
+
+module.exports = { create, listByUser, cancel, getHistory };

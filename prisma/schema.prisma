@@ -19,19 +19,21 @@ enum Role {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   DELIVERED
   CANCELLED
 }
 
 // Usuario que se autentica con JWT
 model User {
-  id        Int       @id @default(autoincrement())
-  email     String    @unique @db.VarChar(120)
-  password  String // hash de bcrypt, nunca la clave en texto plano
-  name      String    @db.VarChar(100)
-  role      Role      @default(USER)
-  createdAt DateTime  @default(now()) @map("created_at")
-  customer  Customer? // 1:1 → el lado sin FK
+  id                   Int                  @id @default(autoincrement())
+  email                String               @unique @db.VarChar(120)
+  password             String // hash de bcrypt, nunca la clave en texto plano
+  name                 String               @db.VarChar(100)
+  role                 Role                 @default(USER)
+  createdAt            DateTime             @default(now()) @map("created_at")
+  customer             Customer? // 1:1 → el lado sin FK
+  orderStatusHistories OrderStatusHistory[]
 
   @@map("users")
 }
@@ -91,13 +93,14 @@ model Book {
 // 1:N: un cliente tiene muchos pedidos; un pedido pertenece a un cliente
 // Restrict: no se puede borrar un cliente que tiene pedidos (se conserva el historial)
 model Order {
-  id         Int         @id @default(autoincrement())
-  status     OrderStatus @default(PENDING)
-  total      Decimal     @db.Decimal(10, 2)
-  createdAt  DateTime    @default(now()) @map("created_at")
-  customerId Int         @map("customer_id")
-  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Restrict)
-  items      OrderItem[]
+  id                   Int                  @id @default(autoincrement())
+  status               OrderStatus          @default(PENDING)
+  total                Decimal              @db.Decimal(10, 2)
+  createdAt            DateTime             @default(now()) @map("created_at")
+  customerId           Int                  @map("customer_id")
+  customer             Customer             @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  items                OrderItem[]
+  orderStatusHistories OrderStatusHistory[]
 
   @@index([customerId])
   @@index([status, createdAt]) // acelera el filtro del listado de administración
@@ -116,4 +119,19 @@ model OrderItem {
 
   @@id([orderId, bookId]) // clave primaria compuesta: un libro aparece una sola vez por pedido
   @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id          Int         @id @default(autoincrement())
+  orderId     Int         @map("order_id")
+  order       Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus  OrderStatus @map("from_status")
+  toStatus    OrderStatus @map("to_status")
+  note        String?     @db.VarChar(200)
+  changedById Int         @map("changed_by_id")
+  changedBy   User        @relation(fields: [changedById], references: [id], onDelete: Restrict)
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  @@index([orderId])
+  @@map("order_status_history")
 }
