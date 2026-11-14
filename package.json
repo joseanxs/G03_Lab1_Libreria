@@ -22,8 +22,10 @@
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "mongoose": "9.11.4",
     "pg": "8.23.1",
-    "prisma": "7.10.1"
+    "prisma": "7.10.1",
+    "validator": "13.15.35"
   },
   "allowScripts": {
     "prisma@7.10.1": true,
