@@ -1,11 +1,10 @@
 const authService = require("../services/auth.service");
 
-// CONTROLADOR: lee la petición, llama al servicio y decide código + JSON
 
 const register = async (req, res, next) => {
   try {
     const user = await authService.register(req.body ?? {});
-    res.status(201).json({ message: "Usuario registrado", user }); // 201
+    res.status(201).json({ message: "Usuario registrado", user });
   } catch (err) {
     next(err);
   }
@@ -14,7 +13,7 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const token = await authService.login(req.body ?? {});
-    res.json({ token }); // 200
+    res.json({ token });
   } catch (err) {
     next(err);
   }

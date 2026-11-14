@@ -78,3 +78,7 @@ erDiagram
 - [x] `createCollection` con `$jsonSchema`: 1 `enum` (`readingFormat`), 1 rango (`rating`, `minimum` 1 y `maximum` 5) y 1 arreglo (`tags`, máximo 8 y sin repetidos)
 - [x] 2 inserts válidos (1984 y Cien años de soledad) y 2 rechazados (`rating` fuera de rango y `readingFormat` fuera del enum), con el campo que falló impreso
 - [x] `$lookup` entre dos colecciones (`reviews` → `book_profiles`) con `$unwind`
+
+## 5. Evidencia
+
+![Compass: fichas de libros del Playground del hito 2](evidencia-compass-hito2.png)

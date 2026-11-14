@@ -1,8 +1,6 @@
 const booksService = require("../services/book.service");
 const HttpError = require("../utils/httpError");
 
-// CONTROLADOR: lee la petición (params, body), llama al servicio y decide código + JSON.
-// No lee archivos ni valida reglas de negocio. Los errores van a next(err) → errorHandler.
 
 const parseId = (req) => {
   const id = Number.parseInt(req.params.id, 10);
@@ -10,25 +8,22 @@ const parseId = (req) => {
   return id;
 };
 
-// ✅ Ya resuelto: GET / → 200
 const list = async (req, res, next) => {
   try {
-    res.json(await booksService.list()); // 200
+    res.json(await booksService.list());
   } catch (err) {
     next(err);
   }
 };
 
-// ✅ Ya resuelto: GET /:id → 200 (el servicio lanza 404 si no existe)
 const getById = async (req, res, next) => {
   try {
-    res.json(await booksService.getById(parseId(req))); // 200
+    res.json(await booksService.getById(parseId(req)));
   } catch (err) {
     next(err);
   }
 };
 
-// TODO Paso 2: POST / → llama a booksService.create(req.body ?? {}) y responde 201 con el registro
 const create = async (req, res, next) => {
   try {
     const nuevo = await booksService.create(req.body ?? {});
@@ -38,7 +33,6 @@ const create = async (req, res, next) => {
   }
 };
 
-// TODO Paso 2: PUT /:id → llama a booksService.update(parseId(req), req.body ?? {}) y responde 200
 const update = async (req, res, next) => {
   try {
     const actualizado = await booksService.update(parseId(req), req.body ?? {});
@@ -48,7 +42,6 @@ const update = async (req, res, next) => {
   }
 };
 
-// TODO Paso 2: DELETE /:id → llama a booksService.remove(parseId(req)) y responde 204 sin cuerpo (res.status(204).end())
 const remove = async (req, res, next) => {
   try {
     await booksService.remove(parseId(req));

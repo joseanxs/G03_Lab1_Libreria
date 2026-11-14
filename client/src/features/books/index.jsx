@@ -48,7 +48,6 @@ const formatearParaBackend = (libro) => ({
 
 export function Books() {
   const [libros, setLibros] = useState([]);
-  // 4 Estados condicionales de la rúbrica: 'cargando' | 'vacio' | 'datos' | 'error'
   const [estado, setEstado] = useState('cargando');
   const [mensajeError, setMensajeError] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -86,7 +85,6 @@ export function Books() {
     cargarLibrosBackend();
   }, []);
 
-  // 1. Botón "Carga": recarga los datos reales del backend (data/books.json) mostrando el estado de carga
   const handleSimularCarga = async () => {
     setEstado('cargando');
     setMensajeError('');
@@ -94,20 +92,17 @@ export function Books() {
     await cargarLibrosBackend();
   };
 
-  // 2. Vaciar inventario en el estado local Y TAMBIÉN en data/books.json del backend
   const handleSimularVacio = async () => {
     const librosParaBorrar = [...libros];
     setLibros([]);
     setEstado('vacio');
 
     try {
-      // 1. Intenta vaciado masivo directo DELETE /api/books
       const response = await fetch(API_URL, {
         method: 'DELETE',
       });
       if (response.ok) return;
 
-      // 2. Fallback secuencial (para evitar colisiones de escritura asíncrona en el archivo JSON)
       let lista = librosParaBorrar.map((l) => l.id);
       if (lista.length === 0) {
         const getRes = await fetch(API_URL);
@@ -125,12 +120,10 @@ export function Books() {
     }
   };
 
-  // 3. Botón "Con Datos": recarga los datos del backend (data/books.json)
   const handleSimularDatos = async () => {
     await cargarLibrosBackend();
   };
 
-  // 4. Simular estado de error 503
   const handleSimularError = () => {
     setEstado('error');
     setMensajeError(
@@ -138,9 +131,7 @@ export function Books() {
     );
   };
 
-  // POST: Guardar nuevo libro desde el modal
   const handleGuardarLibro = async (nuevoLibro) => {
-    // Si el título es 'error', dispara el estado de error de la rúbrica
     if (nuevoLibro.titulo.trim().toLowerCase() === 'error') {
       setEstado('error');
       setMensajeError(
@@ -177,9 +168,7 @@ export function Books() {
     }
   };
 
-  // DELETE: Eliminar libro
   const handleEliminarLibro = async (id) => {
-    // Actualización reactiva inmediata con coerción segura de tipos String(id)
     setLibros((prev) => {
       const filtrados = prev.filter((l) => String(l.id) !== String(id));
       if (filtrados.length === 0) {
@@ -200,7 +189,6 @@ export function Books() {
     }
   };
 
-  // PUT: Alternar disponibilidad
   const handleToggleDisponible = async (id) => {
     const libroActual = libros.find((l) => String(l.id) === String(id));
     if (!libroActual) return;
@@ -209,7 +197,6 @@ export function Books() {
       libroActual.disponible === true || libroActual.disponible === 'true';
     const nuevoDisp = !actualDisp;
 
-    // Actualización reactiva inmediata
     setLibros((prev) =>
       prev.map((l) => (String(l.id) === String(id) ? { ...l, disponible: nuevoDisp } : l))
     );
@@ -237,7 +224,6 @@ export function Books() {
     }
   };
 
-  // Cargar datos de prueba (botón "Con Datos")
   const handleCargarEjemplos = () => {
     setLibros(initialBooks);
     setEstado('datos');
@@ -253,9 +239,6 @@ export function Books() {
       </Header>
 
       <Main className="flex flex-1 flex-col gap-5">
-        {/* ========================================================= */}
-        {/* CABECERA PRINCIPAL: TÍTULO RENOMBRADO                     */}
-        {/* ========================================================= */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
@@ -270,18 +253,12 @@ export function Books() {
           </div>
         </div>
 
-        {/* ========================================================= */}
-        {/* PESTAÑAS: [ Inventario ] [ Estadísticas ]                 */}
-        {/* ========================================================= */}
         <Tabs defaultValue="inventario" className="space-y-4">
           <TabsList className="bg-muted/70 p-1">
             <TabsTrigger value="inventario">Inventario</TabsTrigger>
             <TabsTrigger value="estadisticas">Estadísticas</TabsTrigger>
           </TabsList>
 
-          {/* ========================================================= */}
-          {/* PESTAÑA 1: INVENTARIO (Tabla con sus 4 estados integrados) */}
-          {/* ========================================================= */}
           <TabsContent value="inventario" className="space-y-4">
             <BookTable
               data={libros}
@@ -298,15 +275,11 @@ export function Books() {
             />
           </TabsContent>
 
-          {/* ========================================================= */}
-          {/* PESTAÑA 2: ESTADÍSTICAS (4 KPI + Overview + Recientes)     */}
-          {/* ========================================================= */}
           <TabsContent value="estadisticas" className="space-y-4">
             <BookStats libros={libros} />
           </TabsContent>
         </Tabs>
 
-        {/* Modal flotante para crear libro */}
         <BookDialog
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}

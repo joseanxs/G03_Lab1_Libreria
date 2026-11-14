@@ -1,7 +1,6 @@
 const adminService = require("../services/admin.service");
 const HttpError = require("../utils/httpError");
 
-// GET /api/admin/orders?status=PENDING&from=2026-10-01&page=1&limit=10
 const listOrders = async (req, res, next) => {
   try {
     res.json(await adminService.listOrders(req.query));
@@ -10,7 +9,6 @@ const listOrders = async (req, res, next) => {
   }
 };
 
-// PATCH /api/admin/orders/:id/status  { "status": "DELIVERED" }
 const updateOrderStatus = async (req, res, next) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
@@ -21,7 +19,6 @@ const updateOrderStatus = async (req, res, next) => {
   }
 };
 
-// GET /api/admin/reports/top-books?limit=5
 const topBooks = async (req, res, next) => {
   try {
     res.json(await adminService.topBooks(req.query.limit));

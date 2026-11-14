@@ -7,9 +7,7 @@
     db.reviews.drop();
     db.book_profiles.drop();
 
-    // ─────────────────────────────────────────────────────────────
     // 1. Colección reviews con validación $jsonSchema
-    // ─────────────────────────────────────────────────────────────
     db.createCollection("reviews", {
     validator: {
         $jsonSchema: {
@@ -27,13 +25,10 @@
                 verifiedPurchase: { bsonType: "bool" },
             },
             },
-            // RANGO: entero entre 1 y 5
             rating: { bsonType: "number", minimum: 1, maximum: 5, multipleOf: 1, description: "entero de 1 a 5" },
-            // ENUM: solo tres formatos permitidos
             readingFormat: { enum: ["FISICO", "DIGITAL", "AUDIOLIBRO"], description: "formato en que se leyó" },
             title: { bsonType: "string", maxLength: 120 },
             comment: { bsonType: "string", minLength: 10, maxLength: 2000 },
-            // ARREGLO: strings, máximo 8, sin repetidos
             tags: { bsonType: "array", maxItems: 8, uniqueItems: true, items: { bsonType: "string" } },
             helpfulVotes: { bsonType: "number", minimum: 0, multipleOf: 1 },
             replies: {
@@ -64,9 +59,7 @@
     db.createCollection("book_profiles");
     db.book_profiles.createIndex({ bookId: 1 }, { unique: true });
 
-    // ─────────────────────────────────────────────────────────────
-    // 2. Datos de apoyo (AJUSTA los bookId a libros que existan en tu tabla books de PostgreSQL)
-    // ─────────────────────────────────────────────────────────────
+    // 2. Fichas de libros para la consulta con $lookup
     db.book_profiles.insertMany([
     {
         bookId: 3,
@@ -86,15 +79,13 @@
     },
     ]);
 
-    // ─────────────────────────────────────────────────────────────
     // 3. Inserts: 2 válidos y 2 rechazados, con el campo que falló
-    // ─────────────────────────────────────────────────────────────
     function intentarInsertar(etiqueta, doc) {
     try {
         const r = db.reviews.insertOne(doc);
-        print(`✅ ${etiqueta}: insertado (_id: ${r.insertedId})`);
+        print(`${etiqueta}: insertado (_id: ${r.insertedId})`);
     } catch (err) {
-        print(`❌ ${etiqueta}: RECHAZADO (${err.codeName ?? err.code})`);
+        print(`${etiqueta}: RECHAZADO (${err.codeName ?? err.code})`);
         const reglas = err.errInfo?.details?.schemaRulesNotSatisfied ?? [];
         reglas.forEach((regla) => {
         (regla.propertiesNotSatisfied ?? []).forEach((p) => {
@@ -105,7 +96,6 @@
     }
     }
 
-    // VÁLIDO 1
     intentarInsertar("Válido 1 (1984, Ana)", {
     bookId: 3,
     bookTitle: "1984",
@@ -128,7 +118,6 @@
     updatedAt: new Date("2026-11-13T08:45:00Z"),
     });
 
-    // VÁLIDO 2
     intentarInsertar("Válido 2 (Cien años de soledad, Luis)", {
     bookId: 7,
     bookTitle: "Cien años de soledad",
@@ -142,7 +131,6 @@
     createdAt: new Date("2026-11-13T10:00:00Z"),
     });
 
-    // RECHAZADO 1: viola el RANGO (rating = 9)
     intentarInsertar("Rechazado 1 (rating fuera de rango)", {
     bookId: 3,
     bookTitle: "1984",
@@ -154,7 +142,6 @@
     createdAt: new Date(),
     });
 
-    // RECHAZADO 2: viola el ENUM (readingFormat = "KINDLE")
     intentarInsertar("Rechazado 2 (formato fuera del enum)", {
     bookId: 7,
     bookTitle: "Cien años de soledad",
@@ -166,9 +153,7 @@
     createdAt: new Date(),
     });
 
-    // ─────────────────────────────────────────────────────────────
     // 4. $lookup entre dos colecciones: reviews → book_profiles
-    // ─────────────────────────────────────────────────────────────
     db.reviews.aggregate([
     {
         $lookup: {

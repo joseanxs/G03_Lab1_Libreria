@@ -13,7 +13,6 @@ const initialState = {
 const ThemeContext = createContext(initialState);
 export function ThemeProvider({ children, defaultTheme = DEFAULT_THEME, storageKey = THEME_COOKIE_NAME, ...props }) {
     const [theme, _setTheme] = useState(() => getCookie(storageKey) || defaultTheme);
-    // Optimized: Memoize the resolved theme calculation to prevent unnecessary re-computations
     const resolvedTheme = useMemo(() => {
         if (theme === 'system') {
             return window.matchMedia('(prefers-color-scheme: dark)').matches

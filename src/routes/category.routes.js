@@ -2,7 +2,6 @@ const { Router } = require("express");
 const categoryController = require("../controllers/category.controller");
 const { authenticateToken, requireRole } = require("../middlewares/auth");
 
-// RUTAS: ver categorías es público; crearlas, solo ADMIN
 const router = Router();
 const onlyAdmin = [authenticateToken, requireRole("ADMIN")];
 

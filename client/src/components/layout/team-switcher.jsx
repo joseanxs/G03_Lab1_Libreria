@@ -26,7 +26,6 @@ export function TeamSwitcher({ teams = [] }) {
 
   const [activeTeam, setActiveTeam] = React.useState(defaultTeam);
 
-  // Sincronizar automáticamente cuando cambian los datos de teams
   React.useEffect(() => {
     if (teams && teams.length > 0) {
       setActiveTeam(teams[0]);

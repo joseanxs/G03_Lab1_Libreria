@@ -1,8 +1,6 @@
 const categoryService = require("../services/category.service");
 const HttpError = require("../utils/httpError");
 
-// CONTROLADOR de categorías y búsqueda: lee la petición, llama al servicio y decide código + JSON.
-// No usa Prisma ni valida reglas de negocio. Los errores van a next(err) → errorHandler.
 
 const parseId = (req) => {
   const id = Number.parseInt(req.params.id, 10);
@@ -10,7 +8,6 @@ const parseId = (req) => {
   return id;
 };
 
-// POST /api/categories → 201
 const create = async (req, res, next) => {
   try {
     res.status(201).json(await categoryService.create(req.body ?? {}));
@@ -19,7 +16,6 @@ const create = async (req, res, next) => {
   }
 };
 
-// GET /api/categories → 200
 const list = async (req, res, next) => {
   try {
     res.json(await categoryService.list());
@@ -28,7 +24,6 @@ const list = async (req, res, next) => {
   }
 };
 
-// PUT /api/books/:id/categories → 200
 const setBookCategories = async (req, res, next) => {
   try {
     res.json(await categoryService.setBookCategories(parseId(req), req.body?.categoryIds));
@@ -37,7 +32,6 @@ const setBookCategories = async (req, res, next) => {
   }
 };
 
-// GET /api/books/search?q&category&min&max&sort&page&limit → 200
 const search = async (req, res, next) => {
   try {
     res.json(await categoryService.search(req.query));
@@ -46,7 +40,6 @@ const search = async (req, res, next) => {
   }
 };
 
-// RETO · GET /api/categories/:id/books → 200
 const booksByCategory = async (req, res, next) => {
   try {
     res.json(await categoryService.booksByCategory(parseId(req), req.query));

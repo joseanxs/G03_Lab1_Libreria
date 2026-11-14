@@ -19,7 +19,6 @@ export function BookDialog({ open, onOpenChange, onGuardar }) {
   const [disponible, setDisponible] = useState(true);
   const [errorValidacion, setErrorValidacion] = useState('');
 
-  // Limpiar formulario al abrir
   useEffect(() => {
     if (open) {
       setTitulo('');

@@ -2,7 +2,6 @@ const { Router } = require("express");
 const orderController = require("../controllers/order.controller");
 const { authenticateToken } = require("../middlewares/auth");
 
-// Todas las rutas de pedidos requieren un usuario autenticado
 const router = Router();
 router.use(authenticateToken);
 

@@ -13,6 +13,11 @@
 
 
 ## Descripción
+
+La entrega de **Unidad 2 · Hito 3 (Mongoose y POST en capas)** está documentada en
+[docs/u2/hito3.md](docs/u2/hito3.md). Incluye `POST /api/book-reviews`, la colección
+Postman y las capturas de evidencia. Configura `MONGODB_URI` en `.env`; el arranque
+de la API ahora requiere PostgreSQL y MongoDB disponibles.
  
 La API de la librería ahora está completa, protegida y publicada en internet. Sobre el Lab 2 se agregó:
  
@@ -152,7 +157,7 @@ Mapeo:
 | `Customer` → `Order` | 1:N | `Restrict` | No se puede borrar un cliente con pedidos, para conservar el historial de ventas. |
 | `Order` → `OrderItem` | 1:N | `Cascade` | Un ítem no existe sin su pedido. |
 | `Book` → `OrderItem` | 1:N | `Restrict` | No se puede borrar un libro que ya se vendió. Si se intenta, la API responde 409. |
-| `Order` ↔ `Book` | N:M | n/a | Se resuelve con `OrderItem`, que guarda `quantity` y `unitPrice`. |
+| `Order` y `Book` | N:M | n/a | Se resuelve con `OrderItem`, que guarda `quantity` y `unitPrice`. |
  
 ## Endpoints
  

@@ -1,0 +1,148 @@
+{
+  "info": {
+    "name": "G03_LabU2_Hito3",
+    "description": "Laboratorio U2 · Hito 3 · Grupo G03 · Librería Sapientia Logos. Recurso: book-reviews (MongoDB + Mongoose).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "01 · POST válido → 201",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"201 Created\", () => pm.response.to.have.status(201));",
+              "const r = pm.response.json();",
+              "pm.test(\"Tiene _id de MongoDB\", () => pm.expect(r._id).to.match(/^[a-f0-9]{24}$/));",
+              "pm.test(\"El virtual stars aparece en la respuesta\", () => pm.expect(r.stars).to.eql(\"5 de 5\"));",
+              "pm.test(\"pre(validate) cambió el documento: etiquetas en minúsculas y sin repetir\", () => pm.expect(r.tags).to.eql([\"distopia\", \"clasico\"]));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bookId\": 3,\n  \"bookTitle\": \"1984\",\n  \"user\": {\n    \"userId\": 2,\n    \"name\": \"Ana Pérez\",\n    \"verifiedPurchase\": true\n  },\n  \"rating\": 5,\n  \"readingFormat\": \"FISICO\",\n  \"title\": \"Una distopía imprescindible y totalmente vigente\",\n  \"comment\": \"La construcción del mundo y la crítica al totalitarismo te atrapan desde el primer capítulo.\",\n  \"tags\": [\n    \"  Distopia \",\n    \"CLASICO\",\n    \"distopia\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/{{recurso}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "{{recurso}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "02 · POST vacío → 400 con mensajes de required",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));",
+              "const r = pm.response.json();",
+              "pm.test(\"Trae un mensaje por campo\", () => pm.expect(r.errors).to.be.an(\"array\").that.is.not.empty);",
+              "const msg = (campo) => { const e = r.errors.find((x) => x.field === campo); return e ? e.message : undefined; };",
+              "pm.test(\"Mensaje de bookId obligatorio\", () => pm.expect(msg(\"bookId\")).to.eql(\"El libro es obligatorio\"));",
+              "pm.test(\"Mensaje de rating obligatorio\", () => pm.expect(msg(\"rating\")).to.eql(\"La calificación es obligatoria\"));",
+              "pm.test(\"Mensaje de readingFormat obligatorio\", () => pm.expect(msg(\"readingFormat\")).to.eql(\"El formato de lectura es obligatorio\"));",
+              "pm.test(\"Mensaje de comment obligatorio\", () => pm.expect(msg(\"comment\")).to.eql(\"El comentario es obligatorio\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/{{recurso}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "{{recurso}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "03 · POST inválido → 400 (enum, rango, match, validación propia)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"400 Bad Request\", () => pm.response.to.have.status(400));",
+              "const r = pm.response.json();",
+              "const msg = (campo) => { const e = r.errors.find((x) => x.field === campo); return e ? e.message : undefined; };",
+              "pm.test(\"Validación propia (entero) en bookId\", () => pm.expect(msg(\"bookId\")).to.eql(\"3.5 no es un número entero\"));",
+              "pm.test(\"Rango (max) en rating\", () => pm.expect(msg(\"rating\")).to.eql(\"La calificación máxima es 5\"));",
+              "pm.test(\"Enum en readingFormat\", () => pm.expect(msg(\"readingFormat\")).to.include(\"no es válido\"));",
+              "pm.test(\"Match en user.name\", () => pm.expect(msg(\"user.name\")).to.eql(\"El nombre solo puede tener letras, espacios, punto, apóstrofe o guion\"));",
+              "pm.test(\"Validación propia en tags\", () => pm.expect(msg(\"tags\")).to.include(\"Cada etiqueta\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"bookId\": 3.5,\n  \"bookTitle\": \"1984\",\n  \"user\": {\n    \"userId\": 2,\n    \"name\": \"A1\"\n  },\n  \"rating\": 9,\n  \"readingFormat\": \"KINDLE\",\n  \"comment\": \"Este comentario es suficientemente largo.\",\n  \"tags\": [\n    \"Mal Tag!\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/{{recurso}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "{{recurso}}"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "recurso",
+      "value": "book-reviews"
+    }
+  ]
+}

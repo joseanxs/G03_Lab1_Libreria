@@ -4,21 +4,17 @@ const categoryController = require("../controllers/category.controller");
 const reviewController = require("../controllers/review.controller");
 const { authenticateToken, requireRole } = require("../middlewares/auth");
 
-// RUTAS: conectan cada verbo + URL con una acción del controlador
 const router = Router();
 const onlyAdmin = [authenticateToken, requireRole("ADMIN")];
 
-// Taller B: /search DEBE declararse antes de /:id para no ser capturado como id numérico
+// Declarar /search antes de /:id para evitar que se interprete como un identificador.
 router.get("/search", categoryController.search);
 
-// Rutas base de libros
 router.get("/", bookController.list);
 router.get("/:id", bookController.getById);
 
-// Taller B: reemplazar categorías del libro con set
 router.put("/:id/categories", onlyAdmin, categoryController.setBookCategories);
 
-// Taller A: listar y crear reseñas del libro
 router.get("/:id/reviews", reviewController.list);
 router.post("/:id/reviews", authenticateToken, reviewController.create);
 

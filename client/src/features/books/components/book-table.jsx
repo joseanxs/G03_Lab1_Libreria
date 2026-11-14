@@ -63,19 +63,15 @@ export function BookTable({
   onSimularError,
   onCargarEjemplos,
 }) {
-  // Filtros de búsqueda y disponibilidad
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('todos');
   const [isConfirmVaciarOpen, setIsConfirmVaciarOpen] = useState(false); // 'todos' | 'disponible' | 'no_disponible'
 
-  // Selección de filas
   const [selectedIds, setSelectedIds] = useState(new Set());
 
-  // Paginación
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Filtrado de datos
   const filteredData = useMemo(() => {
     return data.filter((libro) => {
       const matchSearch =
@@ -90,7 +86,6 @@ export function BookTable({
     });
   }, [data, searchTerm, statusFilter]);
 
-  // Cálculo de páginas
   const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
 
@@ -99,7 +94,6 @@ export function BookTable({
     return filteredData.slice(start, start + pageSize);
   }, [filteredData, safePage, pageSize]);
 
-  // Selección
   const allCurrentSelected =
     paginatedData.length > 0 &&
     paginatedData.every((item) => selectedIds.has(item.id));
@@ -124,7 +118,6 @@ export function BookTable({
     setSelectedIds(next);
   };
 
-  // Formato seguro de precio
   const formatPrecio = (precio) => {
     if (typeof precio === 'number') return `$${precio.toFixed(2)}`;
     const num = parseFloat(precio);
@@ -134,9 +127,6 @@ export function BookTable({
 
   return (
     <div className="space-y-4">
-      {/* ========================================================= */}
-      {/* BARRA DE HERRAMIENTAS: SIMULADOR DE ESTADOS Y BOTÓN CREAR */}
-      {/* ========================================================= */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-1.5 rounded-lg border bg-background/50 p-1 text-xs">
           <span className="px-2 font-medium text-muted-foreground">Probar estados:</span>
@@ -188,9 +178,6 @@ export function BookTable({
         </Button>
       </div>
 
-      {/* ========================================================= */}
-      {/* ESTADO 1: CARGA (1.5s retardo con setTimeout)             */}
-      {/* ========================================================= */}
       {estado === 'cargando' && (
         <Card className="flex flex-col items-center justify-center p-16 text-center shadow-sm">
           <Loader2 className="size-10 animate-spin text-primary mb-4" />
@@ -203,9 +190,6 @@ export function BookTable({
         </Card>
       )}
 
-      {/* ========================================================= */}
-      {/* ESTADO 2: VACÍO (Sin libros registrados)                  */}
-      {/* ========================================================= */}
       {estado === 'vacio' && (
         <Card className="flex flex-col items-center justify-center p-16 text-center shadow-sm">
           <div className="rounded-full bg-muted p-4 mb-4">
@@ -230,9 +214,6 @@ export function BookTable({
         </Card>
       )}
 
-      {/* ========================================================= */}
-      {/* ESTADO 3: ERROR (Simulación de fallo del sistema)          */}
-      {/* ========================================================= */}
       {estado === 'error' && (
         <Card className="flex flex-col items-center justify-center p-16 text-center border-destructive/30 bg-destructive/5 shadow-sm">
           <div className="rounded-full bg-destructive/10 p-4 mb-4 text-destructive">
@@ -255,12 +236,8 @@ export function BookTable({
         </Card>
       )}
 
-      {/* ========================================================= */}
-      {/* ESTADO 4: CON DATOS (Tabla con búsqueda, filtro y paginación) */}
-      {/* ========================================================= */}
       {estado === 'datos' && (
         <Card className="overflow-hidden border shadow-sm flex flex-col gap-0">
-          {/* Barra de búsqueda y filtro */}
           <div className="flex flex-wrap items-center justify-between gap-3 p-4 border-b bg-card">
             <div className="flex flex-1 flex-wrap items-center gap-2 max-w-lg">
               <div className="relative flex-1 min-w-[220px]">
@@ -300,8 +277,8 @@ export function BookTable({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="todos">Todos los estados</SelectItem>
-                    <SelectItem value="disponible">✓ Disponibles</SelectItem>
-                    <SelectItem value="no_disponible">✕ No disponibles</SelectItem>
+                    <SelectItem value="disponible">Disponibles</SelectItem>
+                    <SelectItem value="no_disponible">No disponibles</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -325,7 +302,6 @@ export function BookTable({
             )}
           </div>
 
-          {/* Tabla centralizada */}
           <div className="relative w-full overflow-x-auto">
             <Table className="w-full">
               <TableHeader>
@@ -399,14 +375,14 @@ export function BookTable({
                                   variant="outline"
                                   className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold"
                                 >
-                                  ✓ Disponible
+                                  Disponible
                                 </Badge>
                               ) : (
                                 <Badge
                                   variant="destructive"
                                   className="bg-destructive/15 text-destructive hover:bg-destructive/20 border-destructive/30 font-semibold"
                                 >
-                                  ✕ No disponible
+                                  No disponible
                                 </Badge>
                               )}
                             </button>
@@ -441,7 +417,6 @@ export function BookTable({
             </Table>
           </div>
 
-          {/* Barra de paginación */}
           <div className="flex flex-wrap items-center justify-between gap-4 p-4 border-t bg-card text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Select

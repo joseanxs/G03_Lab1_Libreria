@@ -27,7 +27,6 @@ export function BookStats({ libros = [] }) {
   const porcentajeDisponibles = total > 0 ? Math.round((disponibles / total) * 100) : 0;
   const porcentajeAgotados = total > 0 ? Math.round((agotados / total) * 100) : 0;
 
-  // Datos para el gráfico de barras por libro
   const chartData = useMemo(() => {
     if (!libros || libros.length === 0) return [];
     const items = libros.slice(0, 10);
@@ -50,7 +49,6 @@ export function BookStats({ libros = [] }) {
     });
   }, [libros]);
 
-  // Libros recientes (últimos 5)
   const recentBooks = libros.slice(0, 5);
 
   const getInitials = (titulo) => {
@@ -64,11 +62,7 @@ export function BookStats({ libros = [] }) {
 
   return (
     <div className="space-y-4">
-      {/* ========================================================= */}
-      {/* 1. LAS 4 TARJETAS KPI SUPERIORES                          */}
-      {/* ========================================================= */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {/* Tarjeta 1: Valor del Inventario */}
         <Card className="border shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -86,7 +80,6 @@ export function BookStats({ libros = [] }) {
           </CardContent>
         </Card>
 
-        {/* Tarjeta 2: Títulos Registrados */}
         <Card className="border shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -104,7 +97,6 @@ export function BookStats({ libros = [] }) {
           </CardContent>
         </Card>
 
-        {/* Tarjeta 3: Disponibles en Stock */}
         <Card className="border shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -122,7 +114,6 @@ export function BookStats({ libros = [] }) {
           </CardContent>
         </Card>
 
-        {/* Tarjeta 4: Agotados / Préstamos */}
         <Card className="border shadow-xs">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -141,11 +132,7 @@ export function BookStats({ libros = [] }) {
         </Card>
       </div>
 
-      {/* ========================================================= */}
-      {/* 2. GRÁFICO OVERVIEW Y LISTA DE MOVIMIENTOS RECIENTES     */}
-      {/* ========================================================= */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Gráfico de barras (col-span 4) */}
         <Card className="lg:col-span-4 border shadow-xs">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Distribución de precios</CardTitle>
@@ -207,7 +194,6 @@ export function BookStats({ libros = [] }) {
           </CardContent>
         </Card>
 
-        {/* Lista de libros recientes (col-span 3) */}
         <Card className="lg:col-span-3 border shadow-xs">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Libros Recientes</CardTitle>

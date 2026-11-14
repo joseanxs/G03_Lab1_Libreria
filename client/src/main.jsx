@@ -9,9 +9,7 @@ import { handleServerError } from '@/lib/handle-server-error';
 import { DirectionProvider } from './context/direction-provider';
 import { FontProvider } from './context/font-provider';
 import { ThemeProvider } from './context/theme-provider';
-// Generated Routes
 import { routeTree } from './routeTree.gen';
-// Styles
 import './styles/index.css';
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -58,20 +56,17 @@ const queryClient = new QueryClient({
                     }
                 }
                 if (error.response?.status === 403) {
-                    // router.navigate("/forbidden", { replace: true });
                 }
             }
         },
     }),
 });
-// Create a new router instance
 const router = createRouter({
     routeTree,
     context: { queryClient },
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
 });
-// Render the app
 const rootElement = document.getElementById('root');
 if (!rootElement.innerHTML) {
     const root = ReactDOM.createRoot(rootElement);
