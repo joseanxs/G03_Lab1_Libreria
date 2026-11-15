@@ -1,494 +1,337 @@
-# Laboratorio 3 · Relaciones, autenticación y despliegue
+# Librería Sapientia Logos · API REST y Persistencia Políglota
 
-**Desarrollo Web Avanzado (A0R04) · ESPE · Unidad 1: Persistencia de datos y ORM**
+**Desarrollo Web Avanzado (A0R04) · ESPE**  
+**Unidad 2: Integración con bases NoSQL y APIs REST (MongoDB + Mongoose · Hitos 1 a 3)**  
+*Con persistencia políglota y núcleo transaccional relacional (PostgreSQL + Prisma)*
 
 | Dato | Valor |
 |---|---|
-| Grupo | G03 |
-| Emprendimiento | Librería Sapientia Logos |
-| Integrantes | 1. Jose Reinoso 2. Yostin Sisalema 3. Frank Alvarado |
-| NRC | 36878 |
-| Fecha | 28-10-2026 |
-| Repositorio | https://github.com/joseanxs/G03_Lab1_Libreria.git (rama `lab3-api-completa`) |
-
-
-## Descripción
-
-La entrega de **Unidad 2 · Hito 3 (Mongoose y POST en capas)** está documentada en
-[docs/u2/hito3.md](docs/u2/hito3.md). Incluye `POST /api/book-reviews`, la colección
-Postman y las capturas de evidencia. Configura `MONGODB_URI` en `.env`; el arranque
-de la API ahora requiere PostgreSQL y MongoDB disponibles.
- 
-La API de la librería ahora está completa, protegida y publicada en internet. Sobre el Lab 2 se agregó:
- 
-- **Autenticación en capas:** registro y login con bcrypt y JWT, y rutas protegidas por token y por rol (`USER` y `ADMIN`), organizadas en `routes → controllers → services`.
-- **Relaciones reales en `schema.prisma`:** una 1:1 (`User` y `Customer`), una 1:N (`Category` y `Book`, y `Customer` y `Order`) y una N:M (`Order` y `Book` a través de `OrderItem`), cada una con su `onDelete`.
-- **Pedidos con transacción:** el recurso limitado es el `stock` del libro. Si no alcanza, la API responde 409 y no deja datos a medias.
-- **Módulo de administración:** listado con filtros y paginación, y un reporte con `groupBy`.
-- **Despliegue en Render** con su base PostgreSQL. Se usó Render en lugar de Railway, como se acordó en clase.
-
-## Requisitos
- 
-- Node.js 20.19 o superior
-- PostgreSQL 17 (con Docker o en Neon)
-- Postman
-- Git
-
-
-## URL pública y usuarios de prueba
- 
-La API publicada responde en https://g03-lab1-libreria.onrender.com. En el plan gratuito de Render el servicio se suspende por inactividad, así que la primera petición puede tardar hasta unos 50 segundos. Conviene abrir `GET /` antes de ejecutar la colección de Postman.
- 
-| Rol | Email | Contraseña |
-|---|---|---|
-| ADMIN | admin@libreria.com | Admin123* |
-| USER | ana@correo.com | Ana12345* |
- 
-
-## Despliegue en Render
-
-1. Crear una base **PostgreSQL** en Render y copiar su *Internal Database URL* y su *External Database URL*.
-2. Crear un **Web Service** conectado al repositorio de GitHub.
-3. **Build Command:** `npm install && npx prisma generate`
-4. **Start Command:** `npx prisma migrate deploy && node src/server.js`
-5. **Variables de entorno:** `DATABASE_URL` (Internal), `JWT_SECRET` y `NODE_ENV=production`.
-6. **Seed:** ejecutado desde local contra la *External Database URL* (equivalente a `DATABASE_PUBLIC_URL` en Railway).
-
-
-## Cómo ejecutar la base y ejecutar
-
-### 1. API REST en Express (src/  -> carpeta principal del proyecto)
-
-```bash
-npm install
-cp .env.example .env      # en Windows: copy .env.example .env
-npm run dev               # http://localhost:3000 o puerto asignado
-```
-
-Importa en Postman `postman/G03_Lab2.postman_collection.json` y ejecuta **Run collection**.
-
-### 2. client/ (Usando React con Vite)
-
-```bash
-cd client
-npm install
-npm run dev
-```
-Credenciales de prueba (precargadas): admin@espe.edu.ec / admin
-
-### 3. Crear la base de datos
- 
-```bash
-docker compose up -d
-```
- 
-Crea un contenedor `lab2-postgres` con usuario `espe_user`, clave `espe_password`, base `espe_db` y puerto `5432`. Para detenerlo: `docker compose down`.
-
-### 4. Migrar, generar el cliente y cargar datos
- 
-```bash
-npm run db:migrate     # aplica las migraciones de prisma/migrations
-npm run db:generate    # Prisma 7 genera el cliente por separado
-npm run db:seed        # carga los datos de prueba
-npm run dev            # API en http://localhost:3000
-```
- 
-| Script | Comando de Prisma | Qué hace |
-|---|---|---|
-| `npm run db:migrate` | `prisma migrate dev` | Aplica las migraciones pendientes (`init` y `relaciones`) |
-| `npm run db:generate` | `prisma generate` | Genera el cliente de Prisma. Se ejecuta después de cada migración |
-| `npm run db:seed` | `prisma db seed` | Borra los datos y carga 4 libros, 3 categorías, 2 usuarios y 1 pedido. Se puede repetir |
-| `npm run db:studio` | `prisma studio` | Abre Prisma Studio para ver las tablas |
-| `npm start` | `prisma migrate deploy && node src/server.js` | Es el comando de producción |
-
-## Estructura del proyecto
- 
-```
-prisma/
-├─ schema.prisma           ← modelo de datos con relaciones, enums y tipos mapeados
-├─ migrations/             ← init (Lab 2) y relaciones (Lab 3), versionadas en Git
-└─ seed.js                 ← limpia hijos antes que padres y carga los datos
-prisma.config.ts           ← URL de la base y comando del seed (Prisma 7)
-docker-compose.yml         ← PostgreSQL 17 para desarrollo
-.env.example               ← plantilla de variables, sin claves reales
-src/
-├─ app.js                  ← express.json, logger, CORS, prefijo /api y manejo de errores
-├─ server.js               ← verifica JWT_SECRET, conecta Prisma y levanta el servidor
-├─ db/prisma.js            ← única instancia de PrismaClient (adaptador PrismaPg)
-├─ routes/                 ← index, auth, book, order y admin: verbo + URL + protección
-├─ controllers/            ← auth, book, order y admin: leen req y deciden código + JSON
-├─ services/               ← auth, book, order y admin: validaciones y TODAS las consultas a Prisma
-├─ middlewares/            ← auth (authenticateToken y requireRole), logger, notFound, errorHandler
-└─ utils/httpError.js
-postman/                   ← colección y entorno de Postman
-evidencias/                ← capturas de Postman, base de datos y Render
-MODELO_ER.md               ← diagrama ER final con cardinalidades y onDelete
-client/                    ← interfaz en React del Lab 1
-```
- 
-Flujo de una petición: **ruta → middlewares de auth → controlador → servicio → Prisma → PostgreSQL**. No hay consultas de Prisma en rutas ni en controladores.
-
-## Modelo de datos
- 
-El diagrama completo está en [MODELO_ER.md](MODELO_ER.md). Las tablas heredadas del Lab 2 conservan sus nombres (`libros`, `categorias`). `Sale` y `SaleItem` se reemplazaron por `Order` y `OrderItem`.
- 
-| Modelo Prisma | Tabla | Campos principales |
-|---|---|---|
-| `User` | `users` | `id`, `email` (único), `password` (hash de bcrypt), `name`, `role` (enum `Role`) |
-| `Customer` | `customers` | `id`, `fullName`, `email` (único), `phone` (opcional), `userId` (único, opcional) |
-| `Category` | `categorias` | `id`, `name` (único), `description` (opcional), `aisle`, `active` |
-| `Book` | `libros` | `id`, `title` (columna `titulo`, único), `author`, `price` (`Decimal(10,2)`), `available`, `stock`, `categoryId` (opcional) |
-| `Order` | `orders` | `id`, `status` (enum `OrderStatus`), `total` (`Decimal(10,2)`), `customerId` |
-| `OrderItem` | `order_items` | `orderId` y `bookId` (clave primaria compuesta), `quantity`, `unitPrice` (`Decimal(10,2)`) |
- 
-Mapeo:
- 
-- **Enums:** `Role` (`USER`, `ADMIN`) y `OrderStatus` (`PENDING`, `DELIVERED`, `CANCELLED`).
-- **Tipos:** el dinero va en `Decimal(10,2)` para no perder centavos. Prisma lo devuelve como texto en el JSON, por ejemplo `"10.50"`.
-- **Índices:** `libros(category_id)`, `orders(customer_id)` y el índice compuesto `orders(status, created_at)`, que acelera el filtro del listado de administración. `order_items` usa la clave primaria compuesta `(order_id, book_id)`.
-- **Nombres:** snake_case con `@map` y `@@map`.
-
-### Decisiones de `onDelete`
- 
-| Relación | Cardinalidad | `onDelete` | Por qué |
-|---|---|---|---|
-| `User` → `Customer` | 1:1 | `Cascade` | El perfil de cliente no tiene sentido sin su cuenta. La FK `user_id` es única para garantizar el 1:1. |
-| `Category` → `Book` | 1:N | `SetNull` | Borrar una categoría no debe borrar los libros: quedan sin categoría y se pueden reclasificar. |
-| `Customer` → `Order` | 1:N | `Restrict` | No se puede borrar un cliente con pedidos, para conservar el historial de ventas. |
-| `Order` → `OrderItem` | 1:N | `Cascade` | Un ítem no existe sin su pedido. |
-| `Book` → `OrderItem` | 1:N | `Restrict` | No se puede borrar un libro que ya se vendió. Si se intenta, la API responde 409. |
-| `Order` y `Book` | N:M | n/a | Se resuelve con `OrderItem`, que guarda `quantity` y `unitPrice`. |
- 
-## Endpoints
- 
-| Método | Ruta | Rol | Códigos |
-|---|---|---|---|
-| GET | `/` | público | 200 |
-| POST | `/api/auth/register` | público | 201, 400, 409 |
-| POST | `/api/auth/login` | público | 200, 400, 401 |
-| GET | `/api/auth/me` | token | 200, 401, 403 |
-| GET | `/api/books` · `/api/books/:id` | público | 200, 400, 404 |
-| POST · PUT | `/api/books` · `/api/books/:id` | ADMIN | 201 / 200, 400, 401, 403, 404, 409 |
-| POST | `/api/books/lote` | ADMIN | 201, 400, 401, 403, 409 |
-| DELETE | `/api/books/:id` | ADMIN | 204, 400, 401, 403, 404, 409 |
-| DELETE | `/api/books` | ADMIN | 204, 401, 403, 409 (borra todos los libros si ninguno tiene pedidos; solo para pruebas) |
-| POST | `/api/orders` | USER (con perfil de cliente) | 201, 400, 401, 403, 404, 409 |
-| GET | `/api/orders` | USER (con perfil de cliente) | 200, 401, 403 |
-| PATCH | `/api/orders/:id/cancel` | USER (dueño del pedido) | 200, 400, 401, 403, 404, 409 |
-| GET | `/api/admin/orders?status&from&to&page&limit` | ADMIN | 200 `{ page, limit, total, pages, data }`, 400, 401, 403 |
-| PATCH | `/api/admin/orders/:id/status` | ADMIN | 200, 400, 401, 403, 404 |
-| GET | `/api/admin/reports/top-books?limit` | ADMIN | 200, 401, 403 |
- 
-Ruta base: `/api/books`.
- 
-| Verbo | Ruta | Acción | Éxito | Errores |
-|---|---|---|---|---|
-| GET | `/api/books` | Listar todos los libros | 200 | n/a |
-| GET | `/api/books/:id` | Ver un libro por su ID | 200 | 400, 404 |
-| POST | `/api/books` | Crear un libro con datos validados | 201 | 400, 409 |
-| PUT | `/api/books/:id` | Actualizar campos de un libro existente | 200 | 400, 404, 409 |
-| DELETE | `/api/books/:id` | Eliminar un libro por su ID | 204 | 400, 404 |
-| POST | `/api/books/lote` | Crear varios libros en una transacción | 201 | 400, 409 |
-| DELETE | `/api/books` | Eliminar todos los libros (solo para pruebas) | 204 | n/a |
- 
-### Manejo de errores
- 
-`errorHandler.js` traduce los errores de Prisma a códigos HTTP y responde siempre con el mismo formato:
- 
-```json
-{ "status": "error", "statusCode": 409, "message": "Ya existe un registro con ese valor único" }
-```
- 
-| Origen | Código HTTP | Cuándo ocurre |
-|---|---|---|
-| Prisma `P2002` | 409 | Valor único repetido (por ejemplo, un `title` que ya existe) |
-| Prisma `P2025` | 404 | El registro que se quiere actualizar o borrar no existe |
-| Prisma `P2000` | 400 | Un valor excede la longitud permitida de la columna |
-| `HttpError` | el que indique | Validaciones del servicio (400) y libro inexistente (404) |
-| Cualquier otro | 500 | Error inesperado; el mensaje interno no se muestra al cliente |
- 
-
- 
-## Pedidos con transacción
- 
-### Crear un pedido: `POST /api/orders`
- 
-```json
-{ "items": [ { "bookId": 1, "quantity": 2 }, { "bookId": 3, "quantity": 1 } ] }
-```
- 
-El servicio abre `prisma.$transaction(async (tx) => ...)` y, para cada ítem, descuenta el stock con una **actualización condicional** usando `tx`:
- 
-```js
-const { count } = await tx.book.updateMany({
-  where: { id: bookId, stock: { gte: quantity } },
-  data: { stock: { decrement: quantity } },
-});
-if (count === 0) throw new HttpError(409, "Stock insuficiente ...");   // → ROLLBACK
-```
- 
-La condición `stock >= quantity` va dentro de la misma consulta, así que dos pedidos simultáneos por la última unidad no pueden ganar los dos. Si todos los ítems alcanzan, se crea el `Order` con sus `OrderItem`, el total y el precio unitario vigente, y se hace **COMMIT** (201). Si un ítem falla, **ROLLBACK**: el stock de los ítems anteriores no se descuenta y no queda ningún pedido.
- 
-| Situación | Código |
-|---|---|
-| Pedido creado | 201, con ítems y título del libro |
-| `items` vacío, ítems repetidos, `quantity` menor a 1 o no entera | 400 |
-| El libro no existe | 404 |
-| Libro con `available = false` o stock insuficiente | 409 (ROLLBACK) |
-| El usuario no tiene perfil de cliente | 403 |
- 
-### Cancelar un pedido: `PATCH /api/orders/:id/cancel`
- 
-Cambia el estado a `CANCELLED` y devuelve el stock de cada ítem, todo en una transacción. El cambio de estado es una actualización condicional sobre `status = PENDING`, así que si llegan dos cancelaciones a la vez solo una prospera y el stock no se devuelve dos veces.
- 
-| Situación | Código |
-|---|---|
-| Pedido cancelado | 200 |
-| El pedido no existe | 404 |
-| El pedido es de otro usuario | 403 |
-| El pedido ya no está pendiente | 409 |
- 
-### Mis pedidos: `GET /api/orders`
- 
-Lista los pedidos del usuario autenticado con `include` (ítems y libro) y `orderBy` del más reciente al más antiguo.
- 
-## Módulo de administración
- 
-Solo para `ADMIN`.
- 
-- **`GET /api/admin/orders`:** filtra por `status` (`PENDING`, `DELIVERED` o `CANCELLED`), `from` y `to` (fechas `AAAA-MM-DD`, el día `to` se incluye completo) y pagina con `page` (por defecto 1) y `limit` (por defecto 10, máximo 50). Usa `skip/take` y `count`, e incluye el cliente y los ítems con su libro. Un `status` o una fecha inválidos responden 400.
-```json
-  { "page": 1, "limit": 5, "total": 12, "pages": 3, "data": [ { "id": 7, "status": "CANCELLED", "total": "7.50", "customer": {}, "items": [] } ] }
-```
- 
-- **`PATCH /api/admin/orders/:id/status`:** cambia el estado de un pedido. Un estado inválido responde 400 y un pedido inexistente, 404.
-- **`GET /api/admin/reports/top-books?limit`:** reporte con `groupBy` sobre `OrderItem`: los libros más vendidos (`bookId`, `title`, `unitsSold`), sin contar los pedidos cancelados y ordenados de mayor a menor. Por defecto devuelve 5 y como máximo 20.
- 
-## Manejo de errores de clave foránea
-
-El middleware `src/middlewares/errorHandler.js` captura el error de Prisma `P2003` (restricción de clave foránea con `onDelete: Restrict`) y responde `409 Conflict`.
-
-## Pruebas en Postman
- 
-La colección `postman/G03_Lab3.postman_collection.json` tiene 25 peticiones con sus pruebas, adaptadas a las rutas de la librería. Para ejecutarla:
- 
-1. Importa la colección en Postman.
-2. **En local:** deja la variable `baseUrl` en `http://localhost:3000`, ejecuta `npm run db:seed` y usa **Run collection**.
-3. **Contra Render:** importa también `postman/G03_Lab3_Render.postman_environment.json`, selecciónalo como entorno, abre `GET /` para despertar el servicio, y usa **Run collection**. Antes carga el seed en la base de Render (ver «Despliegue en Render»).
-
-| # | Petición | Resultado esperado |
-|---|---|---|
-| 1 | Registrar usuario | 201, sin contraseña y con perfil 1:1 |
-| 2 | Registrar correo repetido | 409 |
-| 3 | Login con clave incorrecta | 401 con mensaje genérico |
-| 4 | Login correcto | 200 con token |
-| 5 | Perfil sin token | 401 |
-| 6 | Perfil con token inválido | 403 |
-| 7 | Perfil con token | 200 |
-| 8 | Login admin del seed | 200 |
-| 9 | Crear libro como USER | 403 |
-| 10 | Crear libro como ADMIN | 201, con `price` como texto (Decimal) |
-| 11 | Pedido con stock suficiente | 201, total correcto e ítems con libro |
-| 12 | Pedido sin stock | 409 (ROLLBACK) |
-| 13 | Verificar ROLLBACK | El stock del ítem anterior no se descontó |
-| 14 | Pedido de libro inexistente | 404 |
-| 15 | Pedido con ítems inválidos | 400 |
-| 16 | Mis pedidos | 200, con ítems (`include`) |
-| 17 | Cancelar pedido | 200, queda `CANCELLED` y devuelve el stock |
-| 18 | Stock restaurado | El stock vuelve al valor inicial |
-| 19 | Cancelar otra vez | 409 |
-| 20 | Admin: pedidos filtrados y paginados | 200, `{ page, limit, total, pages, data }` |
-| 21 | Admin: status inválido | 400 |
-| 22 | Admin con rol USER | 403 |
-| 23 | Admin: top libros con `groupBy` | 200, con `bookId`, `title` y `unitsSold` |
-| 24 | Borrar libro con pedidos | 409 (`Restrict`) |
-| 25 | Ruta inexistente | 404 |
- 
-La ejecución en local pasó las 25 peticiones con **42 aserciones y 0 fallos** (archivo `postman/G03_Lab3 · Librería Sapientia Logos.postman_test_run.json`).
- 
-### Evidencias
- 
-Ejecución de la colección en local:
- 
-![Run collection local, parte 1](evidencias/postman-3.1local.png.jpeg)
- 
-![Run collection local, parte 2](evidencias/postman-3.2local.png.jpeg)
- 
-![Run collection local, parte 3](evidencias/postman-3.3local.png.jpeg)
- 
-![Run collection local, parte 4](evidencias/postman-3.4local.png.jpeg)
- 
-![Run collection local, parte 5](evidencias/postman-3.5local.png.jpeg)
- 
-![Run collection local, parte 6](evidencias/postman-3.6local.png.jpeg)
- 
- 
-Base de datos creada por la migración `relaciones`, con las llaves foráneas (pgAdmin):
- 
-![Diagrama de la base de datos](evidencias/bd.png.jpeg)
- 
-Servicio y base de datos en Render:
- 
-![Servicio en Render](evidencias/render-run1.png.jpeg)
- 
-![Base de datos en Render](evidencias/railway-run2.png.jpeg)
- 
-
-## Aporte de cada integrante (Lab 3)
- 
-| Integrante | Rol | Qué hizo (archivos / pasos) |
-|---|---|---|
-| **Jose Reinoso** | Integrante 1: Primera versión de autenticación, pedidos y administración | • **Autenticación:** rutas, controlador y servicio de auth y `middlewares/auth.js`.<br>• **Pedidos y administración:** controladores, rutas y servicios de `orders` y `admin`.<br>• **Datos:** primera versión del seed relacional y de `book.routes.js`. |
-| **Yostin Sisalema** | Integrante 2: Schema, migración y seguridad | • **Datos:** `schema.prisma` con las relaciones, la migración `relaciones` y los ajustes del seed.<br>• **Modelo:** `MODELO_ER.md` final con cardinalidades y `onDelete`.<br>• **Seguridad y pedidos:** `requireRole`, ajustes de `auth.service.js` y `order.service.js` (actualización condicional y cancelación).<br>• **Limpieza:** `book.routes.js`. |
-| **Frank Alvarado** | Integrante 3: Errores, Postman y despliegue | • **Manejo de errores:** `errorHandler.js` con 409 y 404 de Prisma y claves foráneas.<br>• **Postman:** colección adaptada de 25 peticiones y su ejecución en local y en Render.<br>• **Despliegue:** servicio y base PostgreSQL en Render, variables de entorno y seed contra la base externa.<br>• **Documentación:** evidencias y este `README.md`. |
-
-### Nota Adiccional: Sobre el desarrollo del /client
-
-Con respecto al desarrollo del /client, realizamos una reunión en Live Server para coordinar el diseño. Al trabajar con React (un framework para el desarrollo de interfaces de usuario), nuestro enfoque principal fue estructurar y diseñar los componentes de la interfaz. En este proceso, empleamos el diagrama del [Mapa del sistema](mapa_G03_Lab1.png) como guía para el desarrollo del cliente. La estructura de estos componentes y sus conexiones mutuas se pueden apreciar en la imagen [Diseño del sistema](diseno_visual.png). Por último, cabe añadir que implementamos la plantilla del repositorio shadcn-admin.
-
-## Uso de IA
-
-- **Herramienta:** Claude (Anthropic), en su plataforma web.
-- **Para qué la usamos:**
-  - Para adaptar los pasos de despliegue de Railway a Render, revisar que la URL pública respondiera (`GET /api/books` devolvió los libros en JSON). 
-- **Qué verificamos o modificamos nosotros:**
-  - Aplicamos la migración `relaciones` y cargamos el seed en PostgreSQL, y comprobamos las tablas y las llaves foráneas en pgAdmin (`evidencias/bd.png.j- peg`).
-  - Se verificó o modificó manualmente (pruebas en Postman, error 409 por FK, ROLLBACK sin stock)._
+| **Grupo** | G03 |
+| **Emprendimiento** | Librería *Sapientia Logos* |
+| **Integrantes** | 1. Jose Reinoso · 2. Yostin Sisalema · 3. Frank Alvarado |
+| **NRC** | 36878 |
+| **Tags de entrega** | `u2-hito-1` · `u2-hito-2` · `u2-hito-3` |
+| **Repositorio** | https://github.com/joseanxs/G03_Lab1_Libreria.git (rama `main`) |
 
 ---
 
-## Taller · Nuevas funcionalidades para tu emprendimiento
+## 1. Persistencia Políglota y Núcleo de la Unidad 1
 
-### 6.1. Reparto de tarjetas
+El proyecto opera bajo una **arquitectura de persistencia políglota**, donde cada motor atiende las necesidades de su dominio:
 
-| Integrante | Tarjeta | Rol | Funcionalidad | Rama |
+```
+                         ┌─────────────────────────────────────────────────────────┐
+                         │                    Express API REST                     │
+                         └───────────┬─────────────────────────────────┬───────────┘
+                                     │                                 │
+                     PrismaClient (PostgreSQL 17)             Mongoose 9 (MongoDB 8)
+                                     │                                 │
+                  ┌──────────────────┴───────────────┐     ┌───────────┴───────────┐
+                  │ users · customers · books        │     │ libreria.reviews      │
+                  │ orders · order_items · history   │     │ (subdocumentos/tags)  │
+                  │ [ACID · Integridad referencial]  │     │ [Read-Heavy · BSON]   │
+                  └──────────────────────────────────┘     └───────────────────────┘
+```
+
+### ¿Qué cumple el núcleo relacional heredado (Unidad 1)?
+- **Autenticación y Autorización:** Registro y login con hash bcrypt y tokens JWT, con middleware para rutas públicas y protegidas por roles (`USER` y `ADMIN`).
+- **Catálogo e Inventario:** Gestión de libros (`Book`) y categorías (`Category`) con validaciones de negocio.
+- **Transacciones ACID en Pedidos:** Proceso de compra (`Order` y `OrderItem`) con **descuento condicional de stock** (`WHERE stock >= quantity`). Si el stock no alcanza, se ejecuta un `ROLLBACK` inmediato (409) impidiendo la sobreventa.
+- **Integridad Referencial:** Restricciones de clave foránea con `onDelete: Restrict` para resguardar la consistencia contable de clientes y productos vendidos.
+- **Tecnologías empleadas:** PostgreSQL 17, Prisma ORM 7, Express.js en arquitectura multicapa (`routes → controllers → services`).
+
+---
+
+## 2. Requisitos y Cómo Levantar el Proyecto
+
+### Requisitos
+- Node.js 20.19 o superior
+- Docker y Docker Compose (PostgreSQL 17 y MongoDB 8)
+- MongoDB Compass
+- Postman
+- Git
+
+### Paso a paso para ejecución local
+
+#### 1. Clonar e instalar dependencias
+```bash
+git clone https://github.com/joseanxs/G03_Lab1_Libreria.git
+cd G03_Lab1_Libreria
+npm install
+```
+
+#### 2. Configurar variables de entorno
+Copiar la plantilla `.env.example` a `.env`:
+```bash
+cp .env.example .env    # En Windows PowerShell: Copy-Item .env.example .env
+```
+Verificar que `.env` contenga:
+```env
+PORT=3000
+DATABASE_URL="postgresql://espe_user:espe_password@localhost:5432/espe_db?schema=public"
+MONGODB_URI="mongodb://espe_user:espe_password@localhost:27017/libreria?authSource=admin"
+JWT_SECRET="clave-secreta-para-firmar-jwt"
+```
+
+#### 3. Levantar las bases de datos en Docker
+```bash
+docker compose up -d
+```
+Levanta simultáneamente:
+- **`lab2-postgres` (PostgreSQL 17):** puerto `5432`, base `espe_db`.
+- **`lab2-mongo` (MongoDB 8):** puerto `27017`, base `libreria`.
+
+*(Para detener los contenedores: `docker compose down`)*.
+
+#### 4. Migrar y poblar la base relacional
+```bash
+npm run db:migrate     # Aplica migraciones de Prisma
+npm run db:generate    # Genera el cliente de Prisma
+npm run db:seed        # Carga datos de prueba (libros, usuarios, categorías y pedidos)
+```
+
+#### 5. Iniciar la API
+```bash
+npm run dev
+```
+La aplicación verifica y conecta **ambas bases de datos** antes de abrir el puerto:
+```text
+PostgreSQL conectado
+MongoDB conectado
+Servidor ejecutándose en http://localhost:3000
+```
+
+---
+
+## 3. Unidad 2 · Tu emprendimiento pasa a MongoDB (Hitos 1 a 3)
+
+---
+
+### Hito 1 · ¿Qué dato de tu emprendimiento va a NoSQL? (`tag: u2-hito-1`)
+
+- **Commit / Tag:** `83325bc` · `u2-hito-1` (Yostin Sisalema)
+- **Documentación:** [`docs/u2/hito1.md`](docs/u2/hito1.md)
+
+#### 1. Análisis de tipos NoSQL para la librería
+
+| Dato | ¿Por qué no encaja bien en una tabla relacional? | Tipo NoSQL | Razón técnica |
+|---|---|---|---|
+| **Reseñas y comentarios de libros** | Crecimiento acelerado y estructura variable (etiquetas de opinión, formato leído, votos de utilidad, hilos de respuestas y metadatos cambiantes). | **Documental** (MongoDB) | Agrupa la reseña completa con sus respuestas y tags en un único documento BSON. Elimina JOINs complejos y optimiza lecturas masivas sin bloqueos de tabla. |
+| **Historial de lecturas y navegación** | Flujo masivo y continuo de solo inserción (*append-only*) con atributos dispares según el evento (búsquedas, clics, dispositivo, progreso). | **Documental / Series de tiempo** (MongoDB) | Ingesta masiva indexada por `timestamp` y usuario sin la sobrecarga de locks transaccionales ni claves foráneas. |
+| **Configuración de interfaz y carrito temporal** | Preferencias volátiles (tema, fuente) y carritos efímeros consultados en cada petición HTTP. | **Clave-valor** (Redis) | Acceso en memoria RAM con latencia sub-milisegundo (`user:id:cart`) y expiración automática mediante TTL. |
+
+#### 2. Colección elegida y documento JSON de ejemplo
+Se seleccionó la colección documental **`reviews`**:
+
+```json
+{
+  "_id": { "$oid": "6734b1e8a9c4f21088d3a101" },
+  "bookId": 3,
+  "bookTitle": "1984",
+  "user": {
+    "userId": 2,
+    "name": "Ana Pérez",
+    "verifiedPurchase": true
+  },
+  "rating": 5,
+  "readingFormat": "FISICO",
+  "title": "Una distopía imprescindible y totalmente vigente",
+  "comment": "La construcción del mundo y la crítica al totalitarismo te atrapan desde el primer capítulo. La edición física tiene excelente calidad de papel.",
+  "tags": ["distopia", "clasico", "lectura-obligatoria", "excelente-edicion"],
+  "helpfulVotes": 14,
+  "replies": [
+    {
+      "authorName": "Librería Sapientia Logos",
+      "role": "ADMIN",
+      "message": "¡Muchas gracias por tu reseña, Ana! Nos alegra que disfrutaras esta edición.",
+      "createdAt": "2026-11-13T08:45:00.000Z"
+    }
+  ],
+  "createdAt": "2026-11-13T08:30:00.000Z",
+  "updatedAt": "2026-11-13T08:45:00.000Z"
+}
+```
+
+#### 3. Justificación de qué se queda en PostgreSQL
+Las **transacciones de ventas** (`orders`, `order_items`, `order_status_history`), el **catálogo base de libros** (`books`, `categories`) y las **cuentas de clientes** (`users`, `customers`) permanecen en PostgreSQL debido a:
+1. **Transacciones ACID:** Al generar o cancelar un pedido, el descuento de stock (`stock: { decrement: quantity }`) requiere confirmación inmediata (`COMMIT`) o cancelación completa (`ROLLBACK`) para evitar sobreventa o inconsistencia en inventario.
+2. **Integridad referencial estricta:** Restricciones de clave foránea con `onDelete: Restrict` garantizan que no se pueda eliminar un libro o un cliente que posea órdenes de compra históricas.
+
+---
+
+### Hito 2 · Modelo documental de tu colección (`tag: u2-hito-2`)
+
+- **Commit / Tag:** `2a0c7ed` · `u2-hito-2` (Frank Alvarado)
+- **Documentación y código:** [`docs/u2/hito2.md`](docs/u2/hito2.md) y [`docs/u2/grupoG03.mongodb.js`](docs/u2/grupoG03.mongodb.js)
+- **Evidencia:** [`docs/u2/evidencia-compass-hito2.png`](docs/u2/evidencia-compass-hito2.png)
+
+#### 1. Workload y patrón de acceso
+El análisis del grupo evidenció un patrón marcadamente **read-heavy**:
+- **Lecturas masivas:** ~1 500 consultas por hora en picos de tráfico para ver reseñas por libro (`bookId`) y ~800/h para consultar calificaciones.
+- **Escrituras moderadas:** ~30 reseñas nuevas al día, ~100 votos de utilidad y ~5 respuestas administrativas diarias.
+- **Decisión arquitectónica:** Agrupar en la reseña todo lo que se muestra en pantalla y crear un índice sobre `bookId`.
+
+#### 2. Decisiones de diseño documental: Embeber vs. Referenciar
+
+| Relación | Cardinalidad | ¿Se lee junto? | ¿Cambia seguido? | ¿Crece sin límite? | Decisión técnica |
+|---|---|---|---|---|---|
+| Reseña → `replies` (respuestas de la librería) | 1:N | Sí, bajo la reseña | No | No (acotado a 1-3) | **Embebida** (`replies[]`) |
+| Reseña → `tags` (etiquetas temáticas) | 1:N | Sí | No | No (máximo 8) | **Embebida** (`tags[]`) |
+| Reseña → Autor (`user`) | N:1 | Sí | Rara vez | No | **Embebida parcial**: copia de `userId`, `name` y `verifiedPurchase`. La cuenta completa reside en PostgreSQL. |
+| Reseña → Libro del catálogo | N:1 | Solo el título | Sí (precio/stock en SQL) | Sí (un libro acumula cientos de reseñas) | **Referenciada**: `bookId` numérico de PostgreSQL con copia de `bookTitle` para display. |
+| Reseña → Ficha ampliada (`book_profiles`) | N:1 | Solo en ficha extendida | A veces | Sí (compartida por muchas reseñas) | **Referenciada**: Colección independiente unida mediante `$lookup`. |
+
+#### 3. Diagrama ER de MongoDB
+
+```mermaid
+erDiagram
+    REVIEWS {
+        ObjectId _id PK
+        int bookId FK "referencia a book_profiles y a books (PostgreSQL)"
+        string bookTitle "copia para display"
+        object user "embebido: userId, name, verifiedPurchase"
+        int rating "1 a 5"
+        string readingFormat "FISICO, DIGITAL o AUDIOLIBRO"
+        string title
+        string comment
+        string[] tags "embebido: max 8"
+        int helpfulVotes
+        object[] replies "embebido: authorName, role, message, createdAt"
+        date createdAt
+        date updatedAt
+    }
+    BOOK_PROFILES {
+        ObjectId _id PK
+        int bookId UK "id del libro en PostgreSQL"
+        string author
+        string[] genres
+        int pages
+        string isbn
+        object extras "atributos variables: idioma, premios"
+    }
+    BOOKS_POSTGRES {
+        int id PK
+        string title
+        decimal price
+        int stock
+    }
+    REVIEWS }o--|| BOOK_PROFILES : "bookId ($lookup)"
+    BOOK_PROFILES ||--|| BOOKS_POSTGRES : "bookId (referencia externa)"
+```
+
+#### 4. Playground de MongoDB (`grupoG03.mongodb.js`)
+El script ejecutable para MongoDB for VS Code / mongosh incluye:
+1. **`createCollection` con `$jsonSchema`:**
+   - `enum`: `readingFormat` restringido a `["FISICO", "DIGITAL", "AUDIOLIBRO"]`.
+   - `rango`: `rating` validado con `minimum: 1` y `maximum: 5` (`multipleOf: 1`).
+   - `arreglo`: `tags` configurado con `maxItems: 8`, `uniqueItems: true` y elementos de tipo `string`.
+2. **Casos de prueba:**
+   - 2 inserciones válidas (reseñas de *1984* y *Cien años de soledad*).
+   - 2 inserciones rechazadas por schema (`rating: 6` fuera de rango y `readingFormat: "MANUSCRITO"` fuera del enum), capturando e imprimiendo el motivo de rechazo.
+3. **Agregación con `$lookup` y `$unwind`:** Consulta que une `reviews` con `book_profiles` por `bookId` para reconstruir la ficha integral del libro con sus opiniones.
+
+#### 5. Evidencia del Hito 2
+
+![MongoDB Compass: Fichas de libros insertadas en el Playground](docs/u2/evidencia-compass-hito2.png)
+
+---
+
+### Hito 3 · Modelo Mongoose y POST en capas (`tag: u2-hito-3`)
+
+- **Commits / Tag:** `dc3dac7`, `c63180a` · `u2-hito-3` (Jose Reinoso)
+- **Documentación y código:** [`docs/u2/hito3.md`](docs/u2/hito3.md), [`src/db/mongo.js`](src/db/mongo.js), [`src/models/bookReview.js`](src/models/bookReview.js)
+- **Colección Postman:** [`postman/G03_LabU2_Hito3.postman_collection.json`](postman/G03_LabU2_Hito3.postman_collection.json)
+- **Evidencias:** `docs/u2/evidencia-compass-hito3.png`, `docs/u2/evidencia-postman-hito3-1.png`, `docs/u2/evidencia-postman-hito3-2.png`
+
+#### 1. Conexión dual robusta
+En [`src/db/mongo.js`](src/db/mongo.js) se conecta Mongoose 9 sin opciones obsoletas:
+```javascript
+const mongoose = require("mongoose");
+const connectMongo = async () => {
+  if (!process.env.MONGODB_URI) throw new Error("Falta la variable MONGODB_URI");
+  await mongoose.connect(process.env.MONGODB_URI);
+  console.log("MongoDB conectado");
+};
+module.exports = connectMongo;
+```
+En [`src/server.js`](src/server.js), el servidor inicia `app.listen()` **únicamente si ambas conexiones (PostgreSQL vía Prisma y MongoDB vía Mongoose) son exitosas**. Si cualquiera falla, el proceso aborta con código 1.
+
+#### 2. Esquema Mongoose (`src/models/bookReview.js`)
+Implementa las directrices de Mongoose 9.11.4:
+- **`required` con mensaje:** En `bookId`, `bookTitle`, `user.userId`, `user.name`, `rating`, `readingFormat` y `comment`.
+- **`enum` con mensaje:** `readingFormat: ["FISICO", "DIGITAL", "AUDIOLIBRO"]`.
+- **Rango y límites con mensaje:** `rating` (1 a 5), `comment` (10 a 2 000 caracteres), `title` (máx. 120).
+- **`match` regex:** `user.name` valida caracteres alfabéticos, espacios, apóstrofes y guiones.
+- **Validadores propios con `validator`:** Verificación de enteros estrictos para IDs y control de hasta 8 tags con formato y longitud válidos.
+- **Campo Virtual `stars`:**
+  ```javascript
+  bookReviewSchema.virtual("stars").get(function () {
+    return `${this.rating} de 5`;
+  });
+  ```
+  Se serializa en las respuestas JSON (`toJSON: { virtuals: true }`) sin persistirse en la base de datos.
+- **Middleware Mongoose `pre("validate")`:**
+  ```javascript
+  bookReviewSchema.pre("validate", function () {
+    if (this.tags && Array.isArray(this.tags)) {
+      this.tags = [...new Set(this.tags.map((t) => t.trim().toLowerCase()))];
+    }
+  });
+  ```
+  Opera sobre `this` **sin invocar `next()`** (eliminado en Mongoose 9), normalizando etiquetas a minúsculas y eliminando duplicados.
+
+#### 3. Arquitectura en capas: `POST /api/book-reviews`
+El recurso queda montado bajo `/api/book-reviews` en [`src/routes/index.js`](src/routes/index.js) respetando la separación de responsabilidades:
+- **Ruta ([`src/routes/bookReview.routes.js`](src/routes/bookReview.routes.js)):** Define el endpoint y vincula con el controlador.
+- **Controlador ([`src/controllers/bookReview.controller.js`](src/controllers/bookReview.controller.js)):** Recibe la petición, delega al servicio y ante un `ValidationError` formatea la respuesta en un código `400 Bad Request` con arreglo de errores por campo:
+  ```json
+  {
+    "message": "Datos inválidos",
+    "errors": [
+      { "field": "rating", "message": "La calificación es obligatoria" },
+      { "field": "readingFormat", "message": "El formato de lectura debe ser FISICO, DIGITAL o AUDIOLIBRO" }
+    ]
+  }
+  ```
+- **Servicio ([`src/services/bookReview.service.js`](src/services/bookReview.service.js)):** Filtra campos permitidos (*whitelist*) y ejecuta `BookReview.create(data)`.
+- **Modelo ([`src/models/bookReview.js`](src/models/bookReview.js)):** Aplica validaciones de esquema, virtuals y hooks antes de persistir en la colección `reviews`.
+
+#### 4. Pruebas automatizadas en Postman
+La colección [`postman/G03_LabU2_Hito3.postman_collection.json`](postman/G03_LabU2_Hito3.postman_collection.json) ejecuta 3 peticiones con **16 de 16 aserciones aprobadas (0 fallos)**:
+1. **POST válido:** Responde `201 Created` con el documento persistido, `_id`, virtual `stars` (`"5 de 5"`) y etiquetas normalizadas.
+2. **POST body vacío:** Responde `400 Bad Request` validando los mensajes de todos los campos obligatorios.
+3. **POST con datos inválidos:** Responde `400 Bad Request` verificando mensajes por campo para enum incorrecto, calificación fuera de rango, nombre con caracteres prohibidos y exceso de etiquetas.
+
+#### 5. Evidencias del Hito 3
+
+**Ejecución de la colección Postman (16 aserciones aprobadas, 0 fallos):**
+
+![Postman: 16 aserciones aprobadas en el Hito 3](docs/u2/evidencia-postman-hito3-1.png)
+
+![Postman: Formato y mensajes de error por campo](docs/u2/evidencia-postman-hito3-2.png)
+
+**Inspección en MongoDB Compass (colección `libreria.reviews` con documento y etiquetas normalizadas):**
+
+![MongoDB Compass: Documento de reseña persistido por Mongoose](docs/u2/evidencia-compass-hito3.png)
+
+---
+
+## 4. Aporte de cada Integrante (Unidad 2 · Hitos 1 a 3)
+
+| Integrante | Rol en Unidad 2 | Hito a cargo | Tag en Git | Aporte técnico específico |
 |---|---|---|---|---|
-| **Yostin Sisalema** | **A** | Desarrollador A & Integrador | Reseñas de libros: relación 1:N, clave única compuesta `@@unique([userId, bookId])`, promedio `aggregate(_avg)` y paginación. | `taller/a-yostin` |
-| **Frank Alvarado** | **B** | Desarrollador B | Categorías y búsqueda avanzada: relación N:M implícita, consultas dinámicas con filtros combinados, `some`, `contains`, ordenamiento y asignación con `set`. | `taller/b-frank` |
-| **Jose Reinoso** | **C** | Desarrollador C | Flujo de estados con historial: máquina de estados `OrderStatus`, tabla `OrderStatusHistory`, transacciones ACID con actualización condicional y reversión de stock. | `taller/c-joseReinoso` |
+| **Yostin Sisalema** | Integrante 1 | **Hito 1** | `u2-hito-1` | • Análisis comparativo NoSQL vs. Relacional ([`docs/u2/hito1.md`](docs/u2/hito1.md)).<br>• Justificación técnica para trasladar `reviews` a MongoDB y preservar ventas/inventario en PostgreSQL con transacciones ACID.<br>• Diseño del documento JSON modelo para la colección documental. |
+| **Frank Alvarado** | Integrante 2 | **Hito 2** | `u2-hito-2` | • Análisis cuantitativo de Workload (patrón *read-heavy* de ~1500 lecturas/h).<br>• Matriz de decisiones de embebido (`replies[]`, `tags[]`) vs. referencia (`bookId`).<br>• Diagrama ER documental en Mermaid.<br>• Implementación del script [`docs/u2/grupoG03.mongodb.js`](docs/u2/grupoG03.mongodb.js) con `$jsonSchema` (enum, rango, array), inserts y `$lookup` con `$unwind`. |
+| **Jose Reinoso** | Integrante 3 | **Hito 3** | `u2-hito-3` | • Configuración del ODM Mongoose 9 y conexión dual en [`src/db/mongo.js`](src/db/mongo.js) y [`src/server.js`](src/server.js).<br>• Modelo [`src/models/bookReview.js`](src/models/bookReview.js) con validadores, virtual `stars` y hook `pre("validate")` sin `next`.<br>• Arquitectura en capas para `POST /api/book-reviews` con formateador de `ValidationError` (400).<br>• Colección Postman de 16 aserciones y capturas de evidencia. |
 
-### 6.2. Contrato de cada tarjeta
+## 5. Uso de Inteligencia Artificial
 
-#### Tarjeta A · Reseñas de libros (Yostin Sisalema)
-- **`POST /api/books/:id/reviews`**
-  - **Rol:** Usuario autenticado (`USER` o `ADMIN`).
-  - **Body:** `{ "rating": 5, "comment": "Excelente libro" }` (`rating` obligatorio entero de 1 a 5; `comment` opcional máx. 300 caracteres).
-  - **Respuestas:** `201 Created` · `400 Bad Request` (rating fuera de 1-5 o comment > 300) · `401 Unauthorized` · `404 Not Found` (libro inexistente) · `409 Conflict` (ya lo reseñó).
-  - **Ejemplo de respuesta 201:**
-    ```json
-    {
-      "id": 4,
-      "rating": 5,
-      "comment": "Excelente libro",
-      "createdAt": "2026-10-30T04:00:00.000Z",
-      "userId": 2,
-      "bookId": 1
-    }
-    ```
-- **`GET /api/books/:id/reviews?page=1&limit=10`**
-  - **Rol:** Público.
-  - **Respuestas:** `200 OK` · `404 Not Found`.
-  - **Ejemplo de respuesta 200:**
-    ```json
-    {
-      "bookId": 1,
-      "average": 4.67,
-      "total": 3,
-      "page": 1,
-      "limit": 10,
-      "pages": 1,
-      "data": [
-        {
-          "id": 1,
-          "rating": 5,
-          "comment": "Una obra de arte clásica",
-          "createdAt": "2026-10-30T04:00:00.000Z",
-          "userId": 2,
-          "bookId": 1,
-          "user": { "name": "Ana Pérez" }
-        }
-      ]
-    }
-    ```
-- **`DELETE /api/reviews/:id`**
-  - **Rol:** Autor de la reseña o `ADMIN`.
-  - **Respuestas:** `204 No Content` · `401 Unauthorized` · `403 Forbidden` (no es autor ni admin) · `404 Not Found`.
-
-#### Tarjeta B · Categorías y búsqueda avanzada (Frank Alvarado)
-- **`POST /api/categories`**
-  - **Rol:** `ADMIN`.
-  - **Body:** `{ "name": "Ciencia Ficción", "description": "Obras distópicas y futuristas" }`
-  - **Respuestas:** `201 Created` · `400 Bad Request` · `401/403` · `409 Conflict` (categoría duplicada).
-- **`GET /api/categories`**
-  - **Rol:** Público.
-  - **Respuestas:** `200 OK` (lista con conteo de libros asociados vía `_count: { books: true }`).
-- **`PUT /api/books/:id/categories`**
-  - **Rol:** `ADMIN`.
-  - **Body:** `{ "categoryIds": [1, 2] }`
-  - **Respuestas:** `200 OK` · `400 Bad Request` (no es arreglo de enteros) · `401/403` · `404 Not Found` (libro o categoría inexistente).
-- **`GET /api/books/search?q&category&min&max&sort&page&limit`**
-  - **Rol:** Público (declarado antes de `/:id` en `book.routes.js`).
-  - **Respuestas:** `200 OK` `{ page, limit, total, pages, data }` · `400 Bad Request` (sort inválido o min > max).
-- **`GET /api/categories/:id/books` (Reto opcional)**
-  - **Rol:** Público. Retorna los libros pertenecientes a una categoría con paginación.
-
-#### Tarjeta C · Flujo de estados con historial (Jose Reinoso)
-- **`PATCH /api/admin/orders/:id/status`**
-  - **Rol:** `ADMIN`.
-  - **Body:** `{ "status": "CONFIRMED", "note": "Validado en almacén" }`
-  - **Respuestas:** `200 OK` · `400 Bad Request` · `401/403` · `404 Not Found` · `409 Conflict` (transición no permitida). Al pasar a `CANCELLED`, devuelve el stock en la misma transacción.
-- **`GET /api/orders/:id/history`**
-  - **Rol:** Cliente dueño del pedido o `ADMIN`.
-  - **Respuestas:** `200 OK` · `401 Unauthorized` · `403 Forbidden` · `404 Not Found`.
-  - **Ejemplo de respuesta 200:**
-    ```json
-    {
-      "orderId": 2,
-      "status": "CONFIRMED",
-      "history": [
-        {
-          "id": 1,
-          "fromStatus": "PENDING",
-          "toStatus": "PENDING",
-          "note": "Pedido pendiente de confirmación",
-          "createdAt": "2026-10-30T04:00:00.000Z",
-          "changedBy": { "id": 2, "name": "Ana Pérez" }
-        },
-        {
-          "id": 2,
-          "fromStatus": "PENDING",
-          "toStatus": "CONFIRMED",
-          "note": "Validado en almacén",
-          "createdAt": "2026-10-30T04:05:00.000Z",
-          "changedBy": { "id": 1, "name": "Administración" }
-        }
-      ]
-    }
-    ```
-- **`PATCH /api/orders/:id/cancel`**
-  - **Rol:** Cliente autenticado (dueño del pedido).
-  - **Comportamiento:** Cancela pedidos `PENDING`, devuelve el stock y registra automáticamente el evento en `order_status_history` con nota `"Cancelado por el cliente"`.
-
-### 6.3. Decisiones de modelado en `schema.prisma`
-
-1. **`Review` (Tarjeta A):**
-   - `@db.SmallInt` para la columna `rating` (valores 1 a 5).
-   - `@@unique([userId, bookId])`: unicidad a nivel relacional que garantiza que ningún cliente califique dos veces el mismo recurso.
-   - `@@index([bookId])`: acelera consultas de filtrado y cálculo de promedio con `aggregate(_avg)`.
-   - `onDelete: Cascade` con `User` y `Book`.
-
-2. **`Category` y `Book` (Tarjeta B):**
-   - Relación N:M implícita (`books Book[]` y `categories Category[]`). Prisma genera y administra la tabla relacional `_BookToCategory`.
-   - En el servicio se aplica sincronización atómica con `set: ids.map(id => ({ id }))`.
-
-3. **`OrderStatusHistory` y `OrderStatus` (Tarjeta C):**
-   - Se añadió el estado `CONFIRMED` al enum `OrderStatus`.
-   - `OrderStatusHistory` almacena `fromStatus`, `toStatus`, `note`, `orderId` (`Cascade`) y `changedById` (`Restrict` para auditoría).
-   - Índice `@@index([orderId])`.
-
-### 6.4. Colecciones Postman y Ejecución
-
-- **Colección unificada:** `postman/G03_Taller.postman_collection.json` (incluye Lab 3 completo + Tarjetas A, B y C).
-- **Colecciones individuales disponibles:** `postman/G03_Taller_A.postman_collection.json`, `postman/G03_Taller_B.postman_collection.json`, `postman/G03_Taller_C.postman_collection.json`.
-- Todas las peticiones cuentan con tests automatizados `pm.test` cubriendo casos de éxito y de error (200, 201, 204, 400, 401, 403, 404, 409).
-- **Evidencias gráficas:** en la carpeta `evidencias/` (`taller-a-postman-run-1.png`, `taller-a-postman-run-2.png`, `postman-runB.jpeg`).
+- **Herramientas consultadas:** Claude (Anthropic) y Gemini (Google), a través de sus plataformas web.
+- **Para qué se utilizaron:**
+  - Consulta y resolución de dudas técnicas puntuales sobre la sintaxis de **Mongoose 9**, específicamente la eliminación del callback `next()` en hooks de esquema (`pre("validate")`) y el cambio en la firma de conexión `mongoose.connect()`.
+  - Revisión y depuración de errores de validación BSON al construir el validador `$jsonSchema` en el playground de MongoDB (como la aplicación de `multipleOf: 1` para simular enteros en campos numéricos y la restricción de arreglos sin duplicados con `uniqueItems: true`).
+  - Apoyo en la formulación de expresiones regulares (`match`) para permitir caracteres válidos en nombres (tildes, espacios, apóstrofes).
+- **Qué realizó y verificó el equipo:**
+  - El grupo definió la arquitectura de capas, el diseño del modelo documental de reseñas y la delimitación del núcleo relacional.
+  - La lógica del controlador, servicio y modelo fue escrita e integrada directamente por los integrantes.
+  - Se ejecutaron y verificaron manualmente las 16 aserciones de la colección de Postman y la persistencia de documentos en MongoDB Compass.
